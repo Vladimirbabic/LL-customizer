@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Build the field descriptions for the AI, including field type
-    const fieldDescriptions = fields
+    const fieldDescriptions = (fields || [])
       .map((f: { field_key: string; label: string; field_type: string }) => {
-        const value = values[f.field_key]
+        const value = (values || {})[f.field_key]
         if (!value) return null
         return `- ${f.label} (${f.field_key}, type: ${f.field_type}): "${value}"`
       })

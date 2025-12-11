@@ -113,7 +113,7 @@ export function CustomizationForm({
     try {
       // If we have profile fields, use those instead of template fields
       // This allows profile values to be applied even when template fields don't match
-      const fieldsToUse = profileFields.length > 0 ? profileFields : template.template_fields
+      const fieldsToUse = profileFields.length > 0 ? profileFields : (template.template_fields || [])
       const valuesToUse = profileFields.length > 0 ? initialValues : values
 
       // Use current rendered HTML as base (allows iterative changes)
@@ -122,8 +122,8 @@ export function CustomizationForm({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           htmlContent: renderedHtml, // Use current rendered HTML, not original template
-          fields: fieldsToUse,
-          values: valuesToUse,
+          fields: fieldsToUse || [],
+          values: valuesToUse || {},
           userPrompt: promptToUse,
         }),
       })

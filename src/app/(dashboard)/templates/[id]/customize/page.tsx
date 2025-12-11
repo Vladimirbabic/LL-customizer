@@ -101,6 +101,50 @@ export default function CustomizePage({ params }: CustomizePageProps) {
               if (aiResponse.ok) {
                 const aiResult = await aiResponse.json()
                 setGeneratedHtml(aiResult.html)
+
+                // Auto-save the generated customization
+                const initialPromptHistory = [{
+                  id: `prompt-${Date.now()}`,
+                  prompt: 'Apply my profile information to personalize this template',
+                  timestamp: new Date().toISOString(),
+                  type: 'user' as const
+                }, {
+                  id: `response-${Date.now() + 1}`,
+                  prompt: 'Template updated successfully',
+                  timestamp: new Date().toISOString(),
+                  type: 'system' as const
+                }]
+
+                const initialChangeLog = [{
+                  id: `change-${Date.now()}`,
+                  description: 'Applied profile information',
+                  timestamp: new Date().toISOString()
+                }]
+
+                try {
+                  const saveResponse = await fetch('/api/customizations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      template_id: templateData.id,
+                      name: `My ${templateData.name}`,
+                      values: profile.valuesByKey,
+                      rendered_html: aiResult.html,
+                      prompt_history: initialPromptHistory,
+                      change_log: initialChangeLog,
+                    }),
+                  })
+
+                  if (saveResponse.ok) {
+                    const saveResult = await saveResponse.json()
+                    // Redirect to the edit page for this saved customization
+                    router.replace(`/my-designs/${saveResult.data.id}`)
+                    return
+                  }
+                } catch (saveError) {
+                  console.error('Auto-save error:', saveError)
+                  // Continue without saving - user can manually save later
+                }
               }
             } catch (aiError) {
               console.error('AI generation error:', aiError)

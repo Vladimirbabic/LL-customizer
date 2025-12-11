@@ -57,12 +57,11 @@ function extractBase64(dataUrl: string): string {
 }
 
 // Call Anthropic API with optional image
-// Uses Haiku for text-only (fast), Sonnet for images (vision capability)
 async function callAnthropic(prompt: string, image?: string | null): Promise<string> {
-  // If no image, use Haiku for speed
+  // Use Sonnet for reliable HTML output
   if (!image) {
     const message = await getAnthropicClient().messages.create({
-      model: 'claude-3-5-haiku-20241022',
+      model: 'claude-sonnet-4-20250514',
       max_tokens: 8000,
       messages: [{ role: 'user', content: prompt }],
     })
@@ -107,12 +106,11 @@ async function callAnthropic(prompt: string, image?: string | null): Promise<str
 }
 
 // Call OpenAI API with optional image
-// Uses GPT-4o-mini for text-only (fast), GPT-4o for images (vision capability)
 async function callOpenAI(prompt: string, image?: string | null): Promise<string> {
-  // If no image, use GPT-4o-mini for speed
+  // Use GPT-4o for reliable HTML output
   if (!image) {
     const response = await getOpenAIClient().chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4o',
       max_tokens: 8000,
       messages: [{ role: 'user', content: prompt }],
     })

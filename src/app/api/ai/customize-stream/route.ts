@@ -41,10 +41,10 @@ async function getAIProvider(): Promise<AIProvider> {
   }
 }
 
-// Stream from Anthropic using Haiku
+// Stream from Anthropic using Sonnet
 async function* streamAnthropic(prompt: string): AsyncGenerator<string> {
   const stream = getAnthropicClient().messages.stream({
-    model: 'claude-3-5-haiku-20241022',
+    model: 'claude-sonnet-4-20250514',
     max_tokens: 8000,
     messages: [{ role: 'user', content: prompt }],
   })
@@ -56,10 +56,10 @@ async function* streamAnthropic(prompt: string): AsyncGenerator<string> {
   }
 }
 
-// Stream from OpenAI using GPT-4o-mini
+// Stream from OpenAI using GPT-4o
 async function* streamOpenAI(prompt: string): AsyncGenerator<string> {
   const stream = await getOpenAIClient().chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'gpt-4o',
     max_tokens: 8000,
     messages: [{ role: 'user', content: prompt }],
     stream: true,

@@ -57,25 +57,39 @@ function extractBase64(dataUrl: string): string {
 }
 
 // Call Anthropic API with optional image
-async function callAnthropic(prompt: string, image?: string): Promise<string> {
-  type ContentBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'; data: string } }
+async function callAnthropic(prompt: string, image?: string | null): Promise<string> {
+  // If no image, use simple string content
+  if (!image) {
+    const message = await getAnthropicClient().messages.create({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 16000,
+      messages: [{ role: 'user', content: prompt }],
+    })
 
-  const content: ContentBlock[] = []
+    const responseContent = message.content[0]
+    if (responseContent.type !== 'text') {
+      throw new Error('Unexpected response type from Anthropic')
+    }
 
-  // Add image if provided
-  if (image) {
-    content.push({
+    return responseContent.text.trim()
+  }
+
+  // With image, use array content format
+  type ImageBlock = { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'; data: string } }
+  type TextBlock = { type: 'text'; text: string }
+  type ContentBlock = ImageBlock | TextBlock
+
+  const content: ContentBlock[] = [
+    {
       type: 'image',
       source: {
         type: 'base64',
         media_type: getMediaType(image),
         data: extractBase64(image),
       },
-    })
-  }
-
-  // Add text prompt
-  content.push({ type: 'text', text: prompt })
+    },
+    { type: 'text', text: prompt }
+  ]
 
   const message = await getAnthropicClient().messages.create({
     model: 'claude-sonnet-4-20250514',
@@ -92,21 +106,33 @@ async function callAnthropic(prompt: string, image?: string): Promise<string> {
 }
 
 // Call OpenAI API with optional image
-async function callOpenAI(prompt: string, image?: string): Promise<string> {
-  type ContentPart = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }
-
-  const content: ContentPart[] = []
-
-  // Add image if provided
-  if (image) {
-    content.push({
-      type: 'image_url',
-      image_url: { url: image }, // OpenAI accepts data URLs directly
+async function callOpenAI(prompt: string, image?: string | null): Promise<string> {
+  // If no image, use simple string content
+  if (!image) {
+    const response = await getOpenAIClient().chat.completions.create({
+      model: 'gpt-4o',
+      max_tokens: 16000,
+      messages: [{ role: 'user', content: prompt }],
     })
+
+    const responseContent = response.choices[0]?.message?.content
+    if (!responseContent) {
+      throw new Error('No response from OpenAI')
+    }
+
+    return responseContent.trim()
   }
 
-  // Add text prompt
-  content.push({ type: 'text', text: prompt })
+  // With image, use array content format
+  type ContentPart = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }
+
+  const content: ContentPart[] = [
+    {
+      type: 'image_url',
+      image_url: { url: image }, // OpenAI accepts data URLs directly
+    },
+    { type: 'text', text: prompt }
+  ]
 
   const response = await getOpenAIClient().chat.completions.create({
     model: 'gpt-4o',
@@ -123,7 +149,7 @@ async function callOpenAI(prompt: string, image?: string): Promise<string> {
 }
 
 // Generic AI call that routes to the selected provider
-async function callAI(prompt: string, provider: AIProvider, image?: string): Promise<string> {
+async function callAI(prompt: string, provider: AIProvider, image?: string | null): Promise<string> {
   if (provider === 'openai') {
     return callOpenAI(prompt, image)
   }
@@ -258,7 +284,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ html: modifiedHtml })
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : ''
     console.error('AI customization error:', errorMessage)
+    console.error('Error stack:', errorStack)
     return NextResponse.json(
       { error: `Failed to customize template: ${errorMessage}` },
       { status: 500 }

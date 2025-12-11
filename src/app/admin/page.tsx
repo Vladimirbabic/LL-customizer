@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import { Spinner } from '@/components/ui/spinner'
-import { LayoutGrid, FileText, Users, Plus, ChevronDown } from 'lucide-react'
+import { LayoutGrid, FileText, Users, Plus, ChevronDown, Settings } from 'lucide-react'
 
 interface Stats {
   templates: number
@@ -191,7 +191,7 @@ export default function AdminDashboard() {
           </DarkCard>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
             <Link href="/admin/templates">
               <DarkCard className="p-5 hover:bg-[#252525] transition-colors cursor-pointer group">
                 <div className="flex items-center gap-4">
@@ -229,6 +229,20 @@ export default function AdminDashboard() {
                   <div>
                     <p className="text-white font-medium group-hover:text-[#f5d5d5] transition-colors">Manage Users</p>
                     <p className="text-sm text-gray-500">View registered users</p>
+                  </div>
+                </div>
+              </DarkCard>
+            </Link>
+
+            <Link href="/admin/settings">
+              <DarkCard className="p-5 hover:bg-[#252525] transition-colors cursor-pointer group">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-lg bg-[#f5d5d5]/10 flex items-center justify-center">
+                    <Settings className="w-5 h-5 text-[#f5d5d5]" />
+                  </div>
+                  <div>
+                    <p className="text-white font-medium group-hover:text-[#f5d5d5] transition-colors">Settings</p>
+                    <p className="text-sm text-gray-500">AI provider & configuration</p>
                   </div>
                 </div>
               </DarkCard>

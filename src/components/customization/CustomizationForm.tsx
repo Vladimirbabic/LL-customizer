@@ -9,9 +9,23 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Spinner } from '@/components/ui/spinner'
+import { Textarea } from '@/components/ui/textarea'
 import { validateFieldValue } from '@/lib/template-renderer'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Download, X, FileText, Sparkles } from 'lucide-react'
+import { Save, Download, X, FileText, Sparkles, MessageSquare, History, User, Bot } from 'lucide-react'
+
+interface PromptHistoryItem {
+  id: string
+  prompt: string
+  timestamp: Date
+  type: 'user' | 'system'
+}
+
+interface ChangeLogItem {
+  id: string
+  description: string
+  timestamp: Date
+}
 
 interface CustomizationFormProps {
   template: TemplateWithFields
@@ -42,16 +56,114 @@ export function CustomizationForm({
   const [saveSuccess, setSaveSuccess] = useState(false)
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
-  const [isRegenerating, setIsRegenerating] = useState(false)
+
+  // AI state
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [renderedHtml, setRenderedHtml] = useState(template.html_content)
+  const [userPrompt, setUserPrompt] = useState('')
+  const [promptHistory, setPromptHistory] = useState<PromptHistoryItem[]>([])
+  const [changeLog, setChangeLog] = useState<ChangeLogItem[]>([])
+  const [activeTab, setActiveTab] = useState<'prompts' | 'changes'>('prompts')
 
   const previewRef = useRef<LivePreviewHandle>(null)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  // Check if any values have content
+  const hasValues = Object.values(values).some(v => v && v.trim())
+
+  // Scroll to bottom of chat when new messages added
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [promptHistory])
+
+  // Generate AI-customized HTML
+  const generateAiHtml = useCallback(async (promptOverride?: string) => {
+    const promptToUse = promptOverride || ''
+
+    if (!hasValues && !promptToUse) {
+      setRenderedHtml(template.html_content)
+      return
+    }
+
+    setIsGenerating(true)
+
+    // Add user prompt to history if provided
+    if (promptToUse) {
+      const newPrompt: PromptHistoryItem = {
+        id: `prompt-${Date.now()}`,
+        prompt: promptToUse,
+        timestamp: new Date(),
+        type: 'user'
+      }
+      setPromptHistory(prev => [...prev, newPrompt])
+    }
+
+    try {
+      const response = await fetch('/api/ai/customize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          htmlContent: template.html_content,
+          fields: template.template_fields,
+          values,
+          userPrompt: promptToUse,
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to customize')
+      }
+
+      const data = await response.json()
+      setRenderedHtml(data.html)
+
+      // Add system response to history
+      const systemResponse: PromptHistoryItem = {
+        id: `response-${Date.now()}`,
+        prompt: 'Template updated successfully',
+        timestamp: new Date(),
+        type: 'system'
+      }
+      setPromptHistory(prev => [...prev, systemResponse])
+
+      // Add to change log
+      const changeDescription = promptToUse
+        ? `Applied: "${promptToUse.length > 50 ? promptToUse.slice(0, 50) + '...' : promptToUse}"`
+        : 'Regenerated with field values'
+
+      const newChange: ChangeLogItem = {
+        id: `change-${Date.now()}`,
+        description: changeDescription,
+        timestamp: new Date()
+      }
+      setChangeLog(prev => [...prev, newChange])
+
+    } catch (error) {
+      console.error('AI customization error:', error)
+      // Add error to history
+      const errorResponse: PromptHistoryItem = {
+        id: `error-${Date.now()}`,
+        prompt: 'Failed to generate. Please try again.',
+        timestamp: new Date(),
+        type: 'system'
+      }
+      setPromptHistory(prev => [...prev, errorResponse])
+      // Fallback to original HTML
+      setRenderedHtml(template.html_content)
+    } finally {
+      setIsGenerating(false)
+    }
+  }, [template.html_content, template.template_fields, values, hasValues])
 
   const handleRegenerate = () => {
-    if (previewRef.current) {
-      setIsRegenerating(true)
-      previewRef.current.regenerate()
-      // Reset after a short delay (the preview handles its own loading state)
-      setTimeout(() => setIsRegenerating(false), 500)
+    generateAiHtml(userPrompt)
+    setUserPrompt('')
+  }
+
+  const handlePromptKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleRegenerate()
     }
   }
 
@@ -128,6 +240,7 @@ export function CustomizationForm({
           template_id: template.id,
           name,
           values,
+          rendered_html: renderedHtml, // Save the rendered HTML too
         }),
       })
 
@@ -142,6 +255,9 @@ export function CustomizationForm({
 
       if (!customizationId && result.data?.id) {
         router.replace(`/my-pages/${result.data.id}`)
+      } else {
+        // Refresh to get latest data
+        router.refresh()
       }
     } catch (error) {
       if (!isAutoSave) {
@@ -153,9 +269,6 @@ export function CustomizationForm({
   }
 
   const handleDownloadHtml = () => {
-    // Get the AI-rendered HTML from the preview
-    const renderedHtml = previewRef.current?.getRenderedHtml() || template.html_content
-
     const blob = new Blob([renderedHtml], { type: 'text/html' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -171,9 +284,6 @@ export function CustomizationForm({
     setIsGeneratingPdf(true)
 
     try {
-      // Get the AI-rendered HTML from the preview
-      const renderedHtml = previewRef.current?.getRenderedHtml() || template.html_content
-
       // Send to server for PDF generation
       const response = await fetch('/api/pdf/generate', {
         method: 'POST',
@@ -214,6 +324,10 @@ export function CustomizationForm({
   }
 
   const fields = template.template_fields || []
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+  }
 
   return (
     <div className="fixed inset-0 bg-[#141414] z-50 flex flex-col">
@@ -334,10 +448,10 @@ export function CustomizationForm({
               <Button
                 variant="outline"
                 className="w-full"
-                onClick={handleRegenerate}
-                disabled={isRegenerating}
+                onClick={() => generateAiHtml()}
+                disabled={isGenerating || !hasValues}
               >
-                {isRegenerating ? (
+                {isGenerating ? (
                   <>
                     <Spinner size="sm" className="mr-2" />
                     Regenerating...
@@ -356,19 +470,151 @@ export function CustomizationForm({
           </div>
         </div>
 
-        {/* Right Side - Preview (takes remaining space) */}
-        <div className="flex-1 p-4 overflow-hidden">
-          <div className="h-full bg-white rounded-xl shadow-sm overflow-hidden">
+        {/* Center - Preview */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full bg-[#1a1a1a]">
             <LivePreview
               ref={previewRef}
-              htmlContent={template.html_content}
-              values={values}
-              fields={fields}
+              htmlContent={renderedHtml}
               fullHeight
-              isAdmin={isAdmin}
+              isLoading={isGenerating}
             />
           </div>
         </div>
+
+        {/* Right Sidebar - AI Chat & Change Log (Admin Only) */}
+        {isAdmin && (
+          <div className="w-80 bg-[#1e1e1e] border-l border-white/5 flex flex-col shrink-0">
+            {/* Tab Header */}
+            <div className="flex border-b border-white/5 shrink-0">
+              <button
+                className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                  activeTab === 'prompts'
+                    ? 'text-[#f5d5d5] border-b-2 border-[#f5d5d5]'
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}
+                onClick={() => setActiveTab('prompts')}
+              >
+                <MessageSquare className="w-4 h-4" />
+                AI Chat
+              </button>
+              <button
+                className={`flex-1 px-4 py-3 text-sm font-medium flex items-center justify-center gap-2 transition-colors ${
+                  activeTab === 'changes'
+                    ? 'text-[#f5d5d5] border-b-2 border-[#f5d5d5]'
+                    : 'text-gray-400 hover:text-gray-300'
+                }`}
+                onClick={() => setActiveTab('changes')}
+              >
+                <History className="w-4 h-4" />
+                Changes
+              </button>
+            </div>
+
+            {/* Tab Content */}
+            <div className="flex-1 overflow-y-auto">
+              {activeTab === 'prompts' ? (
+                <div className="p-4 space-y-3">
+                  {promptHistory.length === 0 ? (
+                    <div className="text-center py-8">
+                      <MessageSquare className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">No prompts yet</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Enter instructions below to customize the template
+                      </p>
+                    </div>
+                  ) : (
+                    promptHistory.map((item) => (
+                      <div
+                        key={item.id}
+                        className={`flex gap-2 ${item.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                      >
+                        {item.type === 'system' && (
+                          <div className="w-6 h-6 rounded-full bg-[#f5d5d5]/20 flex items-center justify-center shrink-0">
+                            <Bot className="w-3 h-3 text-[#f5d5d5]" />
+                          </div>
+                        )}
+                        <div
+                          className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                            item.type === 'user'
+                              ? 'bg-[#f5d5d5]/20 text-[#f5d5d5]'
+                              : 'bg-[#2a2a2a] text-gray-300'
+                          }`}
+                        >
+                          <p className="text-sm">{item.prompt}</p>
+                          <p className="text-[10px] opacity-50 mt-1">
+                            {formatTime(item.timestamp)}
+                          </p>
+                        </div>
+                        {item.type === 'user' && (
+                          <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center shrink-0">
+                            <User className="w-3 h-3 text-gray-300" />
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+              ) : (
+                <div className="p-4 space-y-2">
+                  {changeLog.length === 0 ? (
+                    <div className="text-center py-8">
+                      <History className="w-8 h-8 text-gray-600 mx-auto mb-2" />
+                      <p className="text-sm text-gray-500">No changes yet</p>
+                      <p className="text-xs text-gray-600 mt-1">
+                        Changes will appear here as you customize
+                      </p>
+                    </div>
+                  ) : (
+                    changeLog.map((item) => (
+                      <div
+                        key={item.id}
+                        className="bg-[#2a2a2a] rounded-lg px-3 py-2 border border-white/5"
+                      >
+                        <p className="text-sm text-gray-300">{item.description}</p>
+                        <p className="text-[10px] text-gray-500 mt-1">
+                          {formatTime(item.timestamp)}
+                        </p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* AI Prompt Input */}
+            <div className="shrink-0 p-4 border-t border-white/5">
+              <div className="space-y-2">
+                <Textarea
+                  placeholder="Enter AI instructions... (e.g., 'Make the headline more compelling')"
+                  value={userPrompt}
+                  onChange={(e) => setUserPrompt(e.target.value)}
+                  onKeyDown={handlePromptKeyDown}
+                  className="resize-none text-sm min-h-[80px] bg-[#2a2a2a] border-white/10"
+                  rows={3}
+                />
+                <Button
+                  onClick={handleRegenerate}
+                  disabled={isGenerating || (!userPrompt.trim() && !hasValues)}
+                  className="w-full"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Spinner size="sm" className="mr-2" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Generate
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

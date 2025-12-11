@@ -64,6 +64,7 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
   const navItems = [
     { href: '/templates', label: 'Templates' },
     { href: '/my-pages', label: 'Pages' },
+    { href: '/profile', label: 'Profile' },
   ]
 
   const adminItems = [

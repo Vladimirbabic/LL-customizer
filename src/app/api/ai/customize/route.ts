@@ -42,12 +42,45 @@ async function getAIProvider(): Promise<AIProvider> {
   }
 }
 
-// Call Anthropic API
-async function callAnthropic(prompt: string): Promise<string> {
+// Extract media type from base64 data URL
+function getMediaType(base64: string): 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' {
+  if (base64.startsWith('data:image/png')) return 'image/png'
+  if (base64.startsWith('data:image/gif')) return 'image/gif'
+  if (base64.startsWith('data:image/webp')) return 'image/webp'
+  return 'image/jpeg'
+}
+
+// Extract base64 data from data URL
+function extractBase64(dataUrl: string): string {
+  const match = dataUrl.match(/^data:image\/\w+;base64,(.+)$/)
+  return match ? match[1] : dataUrl
+}
+
+// Call Anthropic API with optional image
+async function callAnthropic(prompt: string, image?: string): Promise<string> {
+  type ContentBlock = { type: 'text'; text: string } | { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'; data: string } }
+
+  const content: ContentBlock[] = []
+
+  // Add image if provided
+  if (image) {
+    content.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: getMediaType(image),
+        data: extractBase64(image),
+      },
+    })
+  }
+
+  // Add text prompt
+  content.push({ type: 'text', text: prompt })
+
   const message = await getAnthropicClient().messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 16000,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [{ role: 'user', content }],
   })
 
   const responseContent = message.content[0]
@@ -58,28 +91,43 @@ async function callAnthropic(prompt: string): Promise<string> {
   return responseContent.text.trim()
 }
 
-// Call OpenAI API
-async function callOpenAI(prompt: string): Promise<string> {
+// Call OpenAI API with optional image
+async function callOpenAI(prompt: string, image?: string): Promise<string> {
+  type ContentPart = { type: 'text'; text: string } | { type: 'image_url'; image_url: { url: string } }
+
+  const content: ContentPart[] = []
+
+  // Add image if provided
+  if (image) {
+    content.push({
+      type: 'image_url',
+      image_url: { url: image }, // OpenAI accepts data URLs directly
+    })
+  }
+
+  // Add text prompt
+  content.push({ type: 'text', text: prompt })
+
   const response = await getOpenAIClient().chat.completions.create({
     model: 'gpt-4o',
     max_tokens: 16000,
-    messages: [{ role: 'user', content: prompt }],
+    messages: [{ role: 'user', content }],
   })
 
-  const content = response.choices[0]?.message?.content
-  if (!content) {
+  const responseContent = response.choices[0]?.message?.content
+  if (!responseContent) {
     throw new Error('No response from OpenAI')
   }
 
-  return content.trim()
+  return responseContent.trim()
 }
 
 // Generic AI call that routes to the selected provider
-async function callAI(prompt: string, provider: AIProvider): Promise<string> {
+async function callAI(prompt: string, provider: AIProvider, image?: string): Promise<string> {
   if (provider === 'openai') {
-    return callOpenAI(prompt)
+    return callOpenAI(prompt, image)
   }
-  return callAnthropic(prompt)
+  return callAnthropic(prompt, image)
 }
 
 // Clean up markdown code blocks from response
@@ -98,15 +146,25 @@ function cleanHtmlResponse(html: string): string {
   return cleaned.trim()
 }
 
-// For prompt-only changes
-async function applyPromptChanges(htmlContent: string, userPrompt: string, provider: AIProvider): Promise<string> {
-  const prompt = `Apply this change to the HTML: "${userPrompt}"
+// For prompt-only changes (with optional image reference)
+async function applyPromptChanges(htmlContent: string, userPrompt: string, provider: AIProvider, image?: string): Promise<string> {
+  let prompt: string
+
+  if (image) {
+    prompt = `Look at the attached image and apply these instructions to the HTML: "${userPrompt || 'Use this image as reference for styling or content changes'}"
 
 ${htmlContent}
 
 Return ONLY the modified HTML. No explanations, no markdown code blocks.`
+  } else {
+    prompt = `Apply this change to the HTML: "${userPrompt}"
 
-  const response = await callAI(prompt, provider)
+${htmlContent}
+
+Return ONLY the modified HTML. No explanations, no markdown code blocks.`
+  }
+
+  const response = await callAI(prompt, provider, image)
   return cleanHtmlResponse(response)
 }
 
@@ -157,7 +215,7 @@ Return ONLY the modified HTML. No explanations, no markdown code blocks.`
 
 export async function POST(request: NextRequest) {
   try {
-    const { htmlContent, fields, values, userPrompt } = await request.json()
+    const { htmlContent, fields, values, userPrompt, image } = await request.json()
 
     if (!htmlContent) {
       return NextResponse.json({ error: 'HTML content is required' }, { status: 400 })
@@ -180,14 +238,14 @@ export async function POST(request: NextRequest) {
 
     const hasFieldValues = fieldDescriptions.length > 0
 
-    if (!hasFieldValues && !userPrompt) {
+    if (!hasFieldValues && !userPrompt && !image) {
       return NextResponse.json({ html: htmlContent })
     }
 
     let modifiedHtml: string
 
-    if (userPrompt && !hasFieldValues) {
-      modifiedHtml = await applyPromptChanges(htmlContent, userPrompt, provider)
+    if ((userPrompt || image) && !hasFieldValues) {
+      modifiedHtml = await applyPromptChanges(htmlContent, userPrompt || '', provider, image)
     } else {
       modifiedHtml = await applyFieldValues(htmlContent, safeFields, safeValues, userPrompt, provider)
     }

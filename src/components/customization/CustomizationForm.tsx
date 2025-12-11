@@ -8,13 +8,14 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Download, X, FileText, Sparkles, MessageSquare, History, User, Bot } from 'lucide-react'
+import { Save, Download, X, FileText, Sparkles, MessageSquare, History, User, Bot, ImagePlus } from 'lucide-react'
 
 interface PromptHistoryItem {
   id: string
   prompt: string
   timestamp: Date | string
   type: 'user' | 'system'
+  image?: string // Base64 image data
 }
 
 interface ChangeLogItem {
@@ -78,6 +79,8 @@ export function CustomizationForm({
 
   const previewRef = useRef<LivePreviewHandle>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [attachedImage, setAttachedImage] = useState<string | null>(null)
 
   // Check if any values have content (from profile or template values)
   const hasValues = Object.values(values).some(v => v && v.trim())
@@ -89,10 +92,11 @@ export function CustomizationForm({
   }, [promptHistory])
 
   // Generate AI-customized HTML - uses current rendered HTML as base (not original template)
-  const generateAiHtml = useCallback(async (promptOverride?: string) => {
+  const generateAiHtml = useCallback(async (promptOverride?: string, imageData?: string | null) => {
     const promptToUse = promptOverride || ''
+    const imageToUse = imageData !== undefined ? imageData : attachedImage
 
-    if (!hasValues && !hasProfileValues && !promptToUse) {
+    if (!hasValues && !hasProfileValues && !promptToUse && !imageToUse) {
       setRenderedHtml(template.html_content)
       return
     }
@@ -100,15 +104,19 @@ export function CustomizationForm({
     setIsGenerating(true)
 
     // Add user prompt to history if provided
-    if (promptToUse) {
+    if (promptToUse || imageToUse) {
       const newPrompt: PromptHistoryItem = {
         id: `prompt-${Date.now()}`,
-        prompt: promptToUse,
+        prompt: promptToUse || '(Image attached)',
         timestamp: new Date(),
-        type: 'user'
+        type: 'user',
+        image: imageToUse || undefined
       }
       setPromptHistory(prev => [...prev, newPrompt])
     }
+
+    // Clear attached image after sending
+    setAttachedImage(null)
 
     try {
       // If we have profile fields, use those instead of template fields
@@ -125,6 +133,7 @@ export function CustomizationForm({
           fields: fieldsToUse || [],
           values: valuesToUse || {},
           userPrompt: promptToUse,
+          image: imageToUse, // Include image if attached
         }),
       })
 
@@ -171,11 +180,43 @@ export function CustomizationForm({
     } finally {
       setIsGenerating(false)
     }
-  }, [template.html_content, template.template_fields, values, hasValues, hasProfileValues, renderedHtml, profileFields, initialValues])
+  }, [template.html_content, template.template_fields, values, hasValues, hasProfileValues, renderedHtml, profileFields, initialValues, attachedImage])
 
   const handleRegenerate = () => {
-    generateAiHtml(userPrompt)
+    generateAiHtml(userPrompt, attachedImage)
     setUserPrompt('')
+  }
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Check file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB')
+      return
+    }
+
+    // Check file type
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setAttachedImage(reader.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''
+    }
+  }
+
+  const removeAttachedImage = () => {
+    setAttachedImage(null)
   }
 
   const handlePromptKeyDown = (e: React.KeyboardEvent) => {
@@ -492,6 +533,13 @@ export function CustomizationForm({
                               : 'bg-[#2a2a2a] text-gray-300'
                           }`}
                         >
+                          {item.image && (
+                            <img
+                              src={item.image}
+                              alt="Attached"
+                              className="max-w-full rounded mb-2 max-h-32 object-contain"
+                            />
+                          )}
                           <p className="text-sm">{item.prompt}</p>
                           <p className="text-[10px] opacity-50 mt-1">
                             {formatTime(item.timestamp)}
@@ -537,17 +585,49 @@ export function CustomizationForm({
             {/* AI Prompt Input */}
             <div className="shrink-0 p-4 border-t border-white/5">
               <div className="space-y-2">
-                <Textarea
-                  placeholder="Enter AI instructions... (e.g., 'Make the headline more compelling')"
-                  value={userPrompt}
-                  onChange={(e) => setUserPrompt(e.target.value)}
-                  onKeyDown={handlePromptKeyDown}
-                  className="resize-none text-sm min-h-[80px] bg-[#2a2a2a] border-white/10"
-                  rows={3}
-                />
+                {/* Attached Image Preview */}
+                {attachedImage && (
+                  <div className="relative inline-block">
+                    <img
+                      src={attachedImage}
+                      alt="Attached"
+                      className="max-h-20 rounded border border-white/10"
+                    />
+                    <button
+                      onClick={removeAttachedImage}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                )}
+                <div className="relative">
+                  <Textarea
+                    placeholder="Enter AI instructions... (e.g., 'Make the headline more compelling')"
+                    value={userPrompt}
+                    onChange={(e) => setUserPrompt(e.target.value)}
+                    onKeyDown={handlePromptKeyDown}
+                    className="resize-none text-sm min-h-[80px] bg-[#2a2a2a] border-white/10 pr-10"
+                    rows={3}
+                  />
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute right-2 bottom-2 p-1.5 text-gray-400 hover:text-[#f5d5d5] transition-colors rounded hover:bg-white/5"
+                    title="Attach image"
+                  >
+                    <ImagePlus className="w-5 h-5" />
+                  </button>
+                </div>
                 <Button
                   onClick={handleRegenerate}
-                  disabled={isGenerating || (!userPrompt.trim() && !hasValues)}
+                  disabled={isGenerating || (!userPrompt.trim() && !hasValues && !attachedImage)}
                   className="w-full"
                 >
                   {isGenerating ? (

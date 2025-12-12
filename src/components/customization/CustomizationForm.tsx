@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Download, X, FileText, Sparkles, MessageSquare, History, User, Bot, ImagePlus, ChevronDown } from 'lucide-react'
+import { Save, Download, X, FileText, Sparkles, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 
 interface PromptHistoryItem {
   id: string
@@ -54,7 +55,10 @@ export function CustomizationForm({
   autoGenerate = false,
 }: CustomizationFormProps) {
   const router = useRouter()
-  const [name] = useState(initialName || `My ${template.name}`)
+  const [name, setName] = useState(initialName || `My ${template.name}`)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editingName, setEditingName] = useState('')
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const [values] = useState<Record<string, string>>(() => {
     const defaults: Record<string, string> = {}
     template.template_fields?.forEach((field) => {
@@ -425,6 +429,33 @@ export function CustomizationForm({
     router.push('/designs')
   }
 
+  const handleStartEditName = () => {
+    setEditingName(name)
+    setIsEditingName(true)
+    setTimeout(() => nameInputRef.current?.focus(), 0)
+  }
+
+  const handleSaveName = () => {
+    if (editingName.trim()) {
+      setName(editingName.trim())
+      setHasUnsavedChanges(true)
+    }
+    setIsEditingName(false)
+  }
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false)
+    setEditingName('')
+  }
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSaveName()
+    } else if (e.key === 'Escape') {
+      handleCancelEditName()
+    }
+  }
+
   const formatTime = (date: Date | string) => {
     const d = typeof date === 'string' ? new Date(date) : date
     return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
@@ -444,8 +475,29 @@ export function CustomizationForm({
             <X className="w-5 h-5" />
           </Button>
           <div className="min-w-0">
-            <h1 className="font-semibold text-sm sm:text-lg text-white truncate">{template.name}</h1>
-            {hasUnsavedChanges && (
+            {isEditingName ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  ref={nameInputRef}
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyDown={handleNameKeyDown}
+                  onBlur={handleSaveName}
+                  className="h-8 text-sm sm:text-lg font-semibold bg-[#2a2a2a] border-white/20 w-48 sm:w-64"
+                />
+              </div>
+            ) : (
+              <button
+                onClick={handleStartEditName}
+                className="group flex items-center gap-2 hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
+              >
+                <h1 className="font-semibold text-sm sm:text-lg text-white truncate group-hover:text-[#f5d5d5] transition-colors">
+                  {name}
+                </h1>
+                <Pencil className="w-3 h-3 text-gray-500 group-hover:text-[#f5d5d5] transition-colors opacity-0 group-hover:opacity-100" />
+              </button>
+            )}
+            {hasUnsavedChanges && !isEditingName && (
               <p className="text-xs text-gray-500">Unsaved changes</p>
             )}
           </div>

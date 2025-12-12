@@ -180,15 +180,6 @@ export default function MyDesignsPage() {
                       <span className="text-sm">No preview</span>
                     </div>
                   )}
-                  <span
-                    className={`absolute top-2 right-2 px-2 py-1 text-xs font-medium rounded-full ${
-                      customization.status === 'published'
-                        ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                        : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
-                    }`}
-                  >
-                    {customization.status}
-                  </span>
                 </div>
 
                 <div className="p-4">
@@ -210,7 +201,7 @@ export default function MyDesignsPage() {
                       </button>
                     </Link>
 
-                    {customization.status === 'published' && customization.published_url && (
+                    {customization.published_url && (
                       <Link href={customization.published_url}>
                         <button className="p-2 text-gray-400 hover:text-white bg-[#2a2a2a] hover:bg-[#333] rounded-lg transition-colors">
                           <ExternalLink className="w-4 h-4" />

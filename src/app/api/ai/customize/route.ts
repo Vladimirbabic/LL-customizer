@@ -205,11 +205,16 @@ async function applyPromptChanges(htmlContent: string, userPrompt: string, provi
   let prompt: string
 
   if (image) {
+    // Include the image URL so the AI knows what URL to use in the HTML
+    const imageUrlInfo = isImageUrl(image)
+      ? `\n\nIMPORTANT: The image URL to use in HTML is: ${image}`
+      : ''
+
     prompt = `You are an HTML editor. Your ONLY job is to output modified HTML code.
 
 Look at the attached image and apply these instructions.
 
-TASK: ${userPrompt || 'Use this image as reference for styling or content changes'}
+TASK: ${userPrompt || 'Use this image as reference for styling or content changes'}${imageUrlInfo}
 
 INPUT HTML:
 ${htmlContent}
@@ -221,6 +226,7 @@ OUTPUT RULES:
 - Do NOT ask questions
 - Do NOT use markdown code blocks
 - ONLY output raw HTML code
+- If inserting the attached image, use exactly this URL: ${image}
 
 OUTPUT:`
   } else {

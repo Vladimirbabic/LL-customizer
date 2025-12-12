@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Download, ArrowLeft, X, FileText, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check } from 'lucide-react'
+import { Save, Download, ArrowLeft, X, FileText, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check, Undo2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 interface PromptHistoryItem {
@@ -18,6 +18,7 @@ interface PromptHistoryItem {
   timestamp: Date | string
   type: 'user' | 'system'
   image?: string // Base64 image data
+  htmlSnapshot?: string // HTML state at this point (for revert)
 }
 
 interface ChangeLogItem {
@@ -149,10 +150,21 @@ export function CustomizationForm({
         }
 
         const data = await response.json()
+        let newHtml = data.html
 
-        if (data.html) {
-          setRenderedHtml(data.html)
+        if (newHtml) {
+          setRenderedHtml(newHtml)
         }
+
+        // Add system response with HTML snapshot for revert
+        const systemResponse: PromptHistoryItem = {
+          id: `response-${Date.now()}`,
+          prompt: 'Template updated successfully',
+          timestamp: new Date(),
+          type: 'system',
+          htmlSnapshot: newHtml || renderedHtml
+        }
+        setPromptHistory(prev => [...prev, systemResponse])
       } else {
         // Regular request for images or field values
         const response = await fetch('/api/ai/customize', {
@@ -172,17 +184,19 @@ export function CustomizationForm({
         }
 
         const data = await response.json()
-        setRenderedHtml(data.html)
-      }
+        const newHtml = data.html
+        setRenderedHtml(newHtml)
 
-      // Add system response to history
-      const systemResponse: PromptHistoryItem = {
-        id: `response-${Date.now()}`,
-        prompt: 'Template updated successfully',
-        timestamp: new Date(),
-        type: 'system'
+        // Add system response with HTML snapshot for revert
+        const systemResponse: PromptHistoryItem = {
+          id: `response-${Date.now()}`,
+          prompt: 'Template updated successfully',
+          timestamp: new Date(),
+          type: 'system',
+          htmlSnapshot: newHtml
+        }
+        setPromptHistory(prev => [...prev, systemResponse])
       }
-      setPromptHistory(prev => [...prev, systemResponse])
 
       // Add to change log
       const changeDescription = promptToUse
@@ -214,6 +228,30 @@ export function CustomizationForm({
   const handleRegenerate = () => {
     generateAiHtml(userPrompt, attachedImage)
     setUserPrompt('')
+  }
+
+  // Revert to a previous HTML state
+  const handleRevert = (htmlSnapshot: string, itemId: string) => {
+    setRenderedHtml(htmlSnapshot)
+    setHasUnsavedChanges(true) // Trigger auto-save
+
+    // Add a system message noting the revert
+    const revertMessage: PromptHistoryItem = {
+      id: `revert-${Date.now()}`,
+      prompt: 'Reverted to previous state',
+      timestamp: new Date(),
+      type: 'system',
+      htmlSnapshot: htmlSnapshot
+    }
+    setPromptHistory(prev => [...prev, revertMessage])
+
+    // Add to change log
+    const newChange: ChangeLogItem = {
+      id: `change-${Date.now()}`,
+      description: 'Reverted to previous state',
+      timestamp: new Date()
+    }
+    setChangeLog(prev => [...prev, newChange])
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -682,9 +720,20 @@ export function CustomizationForm({
                             />
                           )}
                           <p className="text-sm">{item.prompt}</p>
-                          <p className="text-[10px] opacity-50 mt-1">
-                            {formatTime(item.timestamp)}
-                          </p>
+                          <div className="flex items-center justify-between gap-2 mt-1">
+                            <p className="text-[10px] opacity-50">
+                              {formatTime(item.timestamp)}
+                            </p>
+                            {item.type === 'system' && item.htmlSnapshot && (
+                              <button
+                                onClick={() => handleRevert(item.htmlSnapshot!, item.id)}
+                                className="flex items-center gap-1 text-[10px] text-[#f5d5d5]/70 hover:text-[#f5d5d5] transition-colors"
+                              >
+                                <Undo2 className="w-3 h-3" />
+                                Revert
+                              </button>
+                            )}
+                          </div>
                         </div>
                         {item.type === 'user' && (
                           <div className="w-6 h-6 rounded-full bg-gray-600 flex items-center justify-center shrink-0">

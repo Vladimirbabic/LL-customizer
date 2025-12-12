@@ -181,12 +181,12 @@ const tools = [
   },
   {
     name: 'change_image',
-    description: 'Change an image URL/source in the HTML.',
+    description: 'Change or replace an image in the HTML. Look for existing image src URLs to replace. When user says "add image in the header", find the header section\'s existing image and replace its URL. Only use when user explicitly requests an image change.',
     input_schema: {
       type: 'object' as const,
       properties: {
-        old_src: { type: 'string', description: 'Current image URL or filename to find' },
-        new_src: { type: 'string', description: 'New image URL' }
+        old_src: { type: 'string', description: 'Current image URL or filename to find in the HTML' },
+        new_src: { type: 'string', description: 'New image URL to replace it with' }
       },
       required: ['old_src', 'new_src']
     }
@@ -205,13 +205,13 @@ const tools = [
   },
   {
     name: 'insert_icon',
-    description: 'Search for and insert an icon from Noun Project. Use this when the user wants to add an icon to represent something (e.g., phone icon, email icon, home icon, checkmark, etc.). The icon will be inserted as an inline SVG.',
+    description: 'Search for and insert an icon from Noun Project. ONLY use when user explicitly asks for an icon. Do NOT proactively add icons. Good for: contact info icons (phone, email, location), feature icons (checkmarks, stars), decorative icons when requested.',
     input_schema: {
       type: 'object' as const,
       properties: {
         search_query: { type: 'string', description: 'Search term for the icon (e.g., "phone", "email", "house", "checkmark")' },
         color: { type: 'string', description: 'Icon color in hex format without # (e.g., "000000" for black, "ffffff" for white, "ff5500" for orange). Default is black.' },
-        replace_text: { type: 'string', description: 'Text in the HTML to replace with the icon. The icon will be inserted in place of this text.' },
+        replace_text: { type: 'string', description: 'A small piece of text near where the icon should appear. For example, to add icon next to "555-1234", use "555" as replace_text.' },
         size: { type: 'string', description: 'Icon size (width and height). Default is "24px".' }
       },
       required: ['search_query', 'replace_text']
@@ -320,14 +320,47 @@ async function callAnthropicWithTools(prompt: string, html: string, customSystem
     ? `\n\nADDITIONAL GUIDELINES:\n${customSystemPrompt}`
     : ''
 
-  const systemPrompt = `You are an HTML editor assistant. Analyze the user's request and use the provided tools to make changes to the HTML.
+  const systemPrompt = `You are an AI assistant that helps real estate agents customize their marketing materials (letters, postcards, reports). Users will ask you to make changes using natural language.
+
+CAPABILITIES - You can:
+- Replace any text (names, phone numbers, emails, addresses, headings, paragraphs)
+- Change colors (backgrounds, text colors, accent colors, borders)
+- Modify styles (font sizes, spacing, widths)
+- Replace images with new image URLs
+- Update links/URLs
+- Insert icons from Noun Project (phone, email, home, checkmark, etc.)
+
+HOW TO HANDLE REQUESTS:
+
+1. **Text Changes**: Find the EXACT text in the HTML (case-sensitive) and replace it
+   - "Change the name to John Smith" → find existing name, replace with "John Smith"
+   - "Update the phone number" → find the phone number pattern, replace it
+
+2. **Adding Icons**: Use insert_icon when user wants visual elements
+   - "Add a phone icon next to the number" → search "phone", replace text before/after number
+   - "Put an email icon" → search "email", find appropriate placement text
+
+3. **Image Placement**: For "add image at [location]", look for:
+   - Comments like <!-- HERO IMAGE --> or <!-- PROFILE -->
+   - Placeholder text like "[IMAGE]" or "YOUR PHOTO HERE"
+   - Existing image URLs that should be replaced
+   - If unclear, use change_image on the most relevant existing image
+
+4. **Color Changes**: Identify the color in the HTML/CSS first
+   - "Make the header blue" → find header's background-color, change it
+   - "Change accent color to gold" → identify accent color hex, replace globally
+
+5. **Style Adjustments**: Find the exact CSS value to change
+   - "Make the title bigger" → find title's font-size, increase it
+   - "Add more spacing" → find relevant margin/padding values
 
 IMPORTANT RULES:
-1. Look at the HTML to find the EXACT text/values to replace
-2. For replace_text, use the EXACT text from the HTML (case-sensitive)
-3. You can call multiple tools if needed
-4. Only make the changes the user requested
-5. You have access to the insert_icon tool to add icons from Noun Project. Use this when the user asks for icons or when it would enhance the design (e.g., adding a phone icon next to a phone number, email icon next to email, etc.)${additionalGuidelines}
+- Always look at the HTML to find EXACT values before replacing
+- For replace_text, match text EXACTLY (case-sensitive)
+- You can call multiple tools for complex requests
+- Only make changes the user explicitly requested
+- When uncertain about placement, prefer the most prominent/visible location
+- DO NOT add new content (images, phone numbers, icons, etc.) unless explicitly asked - only replace existing placeholders${additionalGuidelines}
 
 HTML to edit:
 ${html}`
@@ -360,14 +393,47 @@ async function callOpenAIWithTools(prompt: string, html: string, customSystemPro
     ? `\n\nADDITIONAL GUIDELINES:\n${customSystemPrompt}`
     : ''
 
-  const systemPrompt = `You are an HTML editor assistant. Analyze the user's request and use the provided tools to make changes to the HTML.
+  const systemPrompt = `You are an AI assistant that helps real estate agents customize their marketing materials (letters, postcards, reports). Users will ask you to make changes using natural language.
+
+CAPABILITIES - You can:
+- Replace any text (names, phone numbers, emails, addresses, headings, paragraphs)
+- Change colors (backgrounds, text colors, accent colors, borders)
+- Modify styles (font sizes, spacing, widths)
+- Replace images with new image URLs
+- Update links/URLs
+- Insert icons from Noun Project (phone, email, home, checkmark, etc.)
+
+HOW TO HANDLE REQUESTS:
+
+1. **Text Changes**: Find the EXACT text in the HTML (case-sensitive) and replace it
+   - "Change the name to John Smith" → find existing name, replace with "John Smith"
+   - "Update the phone number" → find the phone number pattern, replace it
+
+2. **Adding Icons**: Use insert_icon when user wants visual elements
+   - "Add a phone icon next to the number" → search "phone", replace text before/after number
+   - "Put an email icon" → search "email", find appropriate placement text
+
+3. **Image Placement**: For "add image at [location]", look for:
+   - Comments like <!-- HERO IMAGE --> or <!-- PROFILE -->
+   - Placeholder text like "[IMAGE]" or "YOUR PHOTO HERE"
+   - Existing image URLs that should be replaced
+   - If unclear, use change_image on the most relevant existing image
+
+4. **Color Changes**: Identify the color in the HTML/CSS first
+   - "Make the header blue" → find header's background-color, change it
+   - "Change accent color to gold" → identify accent color hex, replace globally
+
+5. **Style Adjustments**: Find the exact CSS value to change
+   - "Make the title bigger" → find title's font-size, increase it
+   - "Add more spacing" → find relevant margin/padding values
 
 IMPORTANT RULES:
-1. Look at the HTML to find the EXACT text/values to replace
-2. For replace_text, use the EXACT text from the HTML (case-sensitive)
-3. You can call multiple tools if needed
-4. Only make the changes the user requested
-5. You have access to the insert_icon tool to add icons from Noun Project. Use this when the user asks for icons or when it would enhance the design (e.g., adding a phone icon next to a phone number, email icon next to email, etc.)${additionalGuidelines}
+- Always look at the HTML to find EXACT values before replacing
+- For replace_text, match text EXACTLY (case-sensitive)
+- You can call multiple tools for complex requests
+- Only make changes the user explicitly requested
+- When uncertain about placement, prefer the most prominent/visible location
+- DO NOT add new content (images, phone numbers, icons, etc.) unless explicitly asked - only replace existing placeholders${additionalGuidelines}
 
 HTML to edit:
 ${html}`

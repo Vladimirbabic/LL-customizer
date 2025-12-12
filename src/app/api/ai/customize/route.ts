@@ -42,11 +42,25 @@ async function getAIProvider(): Promise<AIProvider> {
   }
 }
 
+// Check if image is a URL or base64
+function isImageUrl(image: string): boolean {
+  return image.startsWith('http://') || image.startsWith('https://')
+}
+
 // Extract media type from base64 data URL
 function getMediaType(base64: string): 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' {
   if (base64.startsWith('data:image/png')) return 'image/png'
   if (base64.startsWith('data:image/gif')) return 'image/gif'
   if (base64.startsWith('data:image/webp')) return 'image/webp'
+  return 'image/jpeg'
+}
+
+// Get media type from URL extension
+function getMediaTypeFromUrl(url: string): 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp' {
+  const lower = url.toLowerCase()
+  if (lower.includes('.png')) return 'image/png'
+  if (lower.includes('.gif')) return 'image/gif'
+  if (lower.includes('.webp')) return 'image/webp'
   return 'image/jpeg'
 }
 
@@ -75,21 +89,35 @@ async function callAnthropic(prompt: string, image?: string | null): Promise<str
   }
 
   // With image, use Sonnet for vision capability
-  type ImageBlock = { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'; data: string } }
+  type ImageBlockBase64 = { type: 'image'; source: { type: 'base64'; media_type: 'image/jpeg' | 'image/png' | 'image/gif' | 'image/webp'; data: string } }
+  type ImageBlockUrl = { type: 'image'; source: { type: 'url'; url: string } }
   type TextBlock = { type: 'text'; text: string }
-  type ContentBlock = ImageBlock | TextBlock
+  type ContentBlock = ImageBlockBase64 | ImageBlockUrl | TextBlock
 
-  const content: ContentBlock[] = [
-    {
+  let imageBlock: ImageBlockBase64 | ImageBlockUrl
+
+  if (isImageUrl(image)) {
+    // Image is a URL (e.g., from ImageKit)
+    imageBlock = {
+      type: 'image',
+      source: {
+        type: 'url',
+        url: image,
+      },
+    }
+  } else {
+    // Image is base64
+    imageBlock = {
       type: 'image',
       source: {
         type: 'base64',
         media_type: getMediaType(image),
         data: extractBase64(image),
       },
-    },
-    { type: 'text', text: prompt }
-  ]
+    }
+  }
+
+  const content: ContentBlock[] = [imageBlock, { type: 'text', text: prompt }]
 
   const message = await getAnthropicClient().messages.create({
     model: 'claude-sonnet-4-20250514',

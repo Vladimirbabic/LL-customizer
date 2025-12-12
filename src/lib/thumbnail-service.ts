@@ -5,6 +5,13 @@ import ImageKit from 'imagekit'
 // Remote chromium URL for serverless environments
 const CHROMIUM_URL = 'https://github.com/nicktcode/chromium-bin-aws/releases/download/v137.0.0-v138.0.0-v139.0.0-v140.0.0-v141.0.0/chromium-v141.0.0.tar'
 
+// Local Chrome paths for development
+const LOCAL_CHROME_PATHS = {
+  darwin: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  win32: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+  linux: '/usr/bin/google-chrome',
+}
+
 // Lazy initialization to avoid build errors when env vars are missing
 let imagekitClient: ImageKit | null = null
 
@@ -19,6 +26,29 @@ function getImageKitClient(): ImageKit {
   return imagekitClient
 }
 
+async function getBrowser() {
+  const isDev = process.env.NODE_ENV === 'development'
+
+  if (isDev) {
+    // Use local Chrome for development
+    const platform = process.platform as keyof typeof LOCAL_CHROME_PATHS
+    const executablePath = LOCAL_CHROME_PATHS[platform] || LOCAL_CHROME_PATHS.linux
+
+    return puppeteer.launch({
+      args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      executablePath,
+      headless: true,
+    })
+  } else {
+    // Use serverless chromium for production
+    return puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(CHROMIUM_URL),
+      headless: true,
+    })
+  }
+}
+
 export interface ThumbnailResult {
   url: string
   fileId: string
@@ -29,12 +59,8 @@ export async function generateThumbnail(html: string, name?: string): Promise<Th
   let browser = null
 
   try {
-    // Launch headless browser with serverless-compatible Chrome
-    browser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(CHROMIUM_URL),
-      headless: true,
-    })
+    // Launch headless browser
+    browser = await getBrowser()
 
     const page = await browser.newPage()
 
@@ -53,6 +79,20 @@ export async function generateThumbnail(html: string, name?: string): Promise<Th
     // Wait for fonts to load
     await page.evaluate(() => {
       return document.fonts.ready
+    })
+
+    // Wait for all images to load
+    await page.evaluate(async () => {
+      const images = document.querySelectorAll('img')
+      await Promise.all(
+        Array.from(images).map((img) => {
+          if (img.complete) return Promise.resolve()
+          return new Promise((resolve) => {
+            img.addEventListener('load', resolve)
+            img.addEventListener('error', resolve) // Resolve even on error to not block
+          })
+        })
+      )
     })
 
     // Additional wait for rendering

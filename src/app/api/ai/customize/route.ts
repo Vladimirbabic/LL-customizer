@@ -27,7 +27,12 @@ function getOpenAIClient(): OpenAI {
 
 type AIProvider = 'anthropic' | 'openai'
 
-async function getAIProvider(): Promise<AIProvider> {
+interface AISettings {
+  provider: AIProvider
+  systemPrompt: string
+}
+
+async function getAISettings(): Promise<AISettings> {
   try {
     const supabase = await createClient()
     const { data } = await supabase
@@ -36,9 +41,12 @@ async function getAIProvider(): Promise<AIProvider> {
       .eq('key', 'ai_provider')
       .single()
 
-    return data?.value?.provider || 'anthropic'
+    return {
+      provider: data?.value?.provider || 'anthropic',
+      systemPrompt: data?.value?.systemPrompt || ''
+    }
   } catch {
-    return 'anthropic'
+    return { provider: 'anthropic', systemPrompt: '' }
   }
 }
 
@@ -201,8 +209,13 @@ function cleanHtmlResponse(html: string): string {
 }
 
 // For prompt-only changes (with optional image reference)
-async function applyPromptChanges(htmlContent: string, userPrompt: string, provider: AIProvider, image?: string): Promise<string> {
+async function applyPromptChanges(htmlContent: string, userPrompt: string, provider: AIProvider, systemPrompt: string, image?: string): Promise<string> {
   let prompt: string
+
+  // Include system prompt if provided
+  const systemInstructions = systemPrompt
+    ? `\nADDITIONAL GUIDELINES:\n${systemPrompt}\n`
+    : ''
 
   if (image) {
     // Include the image URL so the AI knows what URL to use in the HTML
@@ -211,7 +224,7 @@ async function applyPromptChanges(htmlContent: string, userPrompt: string, provi
       : ''
 
     prompt = `You are an HTML editor. Your ONLY job is to output modified HTML code.
-
+${systemInstructions}
 Look at the attached image and apply these instructions.
 
 TASK: ${userPrompt || 'Use this image as reference for styling or content changes'}${imageUrlInfo}
@@ -231,7 +244,7 @@ OUTPUT RULES:
 OUTPUT:`
   } else {
     prompt = `You are an HTML editor. Your ONLY job is to output modified HTML code.
-
+${systemInstructions}
 TASK: ${userPrompt}
 
 INPUT HTML:
@@ -258,7 +271,8 @@ async function applyFieldValues(
   fields: Array<{field_key: string; label: string; field_type: string}>,
   values: Record<string, string>,
   userPrompt: string | undefined,
-  provider: AIProvider
+  provider: AIProvider,
+  systemPrompt: string
 ): Promise<string> {
   const fieldDescriptions = fields
     .map((f) => {
@@ -269,8 +283,13 @@ async function applyFieldValues(
     .filter(Boolean)
     .join('\n')
 
-  let prompt = `You are an HTML editor. Your ONLY job is to output modified HTML code.
+  // Include system prompt if provided
+  const systemInstructions = systemPrompt
+    ? `\nADDITIONAL GUIDELINES:\n${systemPrompt}\n`
+    : ''
 
+  const prompt = `You are an HTML editor. Your ONLY job is to output modified HTML code.
+${systemInstructions}
 TASK: Replace placeholder content with these values:
 ${fieldDescriptions}
 ${userPrompt ? `\nAdditional: ${userPrompt}` : ''}
@@ -279,10 +298,21 @@ INPUT HTML:
 ${htmlContent}
 
 REPLACEMENT RULES:
-- Names go in name/contact sections
+- First Name goes in name/contact sections where a first name is expected
+- Last Name goes in name/contact sections where a last name is expected
+- Full names should combine First Name and Last Name
 - Phone numbers replace phone placeholders
 - Emails replace email placeholders
-- Colors apply to CSS styles
+- Website URLs replace website/link placeholders
+- Business/Company names replace business name placeholders
+- Job titles replace title/position placeholders
+- Addresses replace address placeholders
+- Social media links replace their respective placeholders
+- Bio/About text replaces bio/about placeholders
+- Profile/Headshot images replace profile image placeholders
+- Brand colors apply to CSS styles (backgrounds, accents, etc.)
+- Brokerage name goes in brokerage/company sections
+- Area served goes in location/area sections
 
 OUTPUT RULES:
 - Output the COMPLETE modified HTML document
@@ -306,8 +336,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'HTML content is required' }, { status: 400 })
     }
 
-    // Get the configured AI provider
-    const provider = await getAIProvider()
+    // Get the configured AI settings (provider and system prompt)
+    const { provider, systemPrompt } = await getAISettings()
 
     const safeFields = fields || []
     const safeValues = values || {}
@@ -330,9 +360,9 @@ export async function POST(request: NextRequest) {
     let modifiedHtml: string
 
     if ((userPrompt || image) && !hasFieldValues) {
-      modifiedHtml = await applyPromptChanges(htmlContent, userPrompt || '', provider, image)
+      modifiedHtml = await applyPromptChanges(htmlContent, userPrompt || '', provider, systemPrompt, image)
     } else {
-      modifiedHtml = await applyFieldValues(htmlContent, safeFields, safeValues, userPrompt, provider)
+      modifiedHtml = await applyFieldValues(htmlContent, safeFields, safeValues, userPrompt, provider, systemPrompt)
     }
 
     if (!modifiedHtml || modifiedHtml.length < 50) {

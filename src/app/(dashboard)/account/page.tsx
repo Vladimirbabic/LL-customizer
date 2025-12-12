@@ -16,7 +16,8 @@ export default function AccountPage() {
   const [user, setUser] = useState<{ id: string; email: string } | null>(null)
 
   // Form states
-  const [fullName, setFullName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -55,12 +56,13 @@ export default function AccountPage() {
       // Fetch profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('full_name')
+        .select('first_name, last_name')
         .eq('id', user.id)
         .single()
 
       if (profile) {
-        setFullName(profile.full_name || '')
+        setFirstName(profile.first_name || '')
+        setLastName(profile.last_name || '')
       }
 
       setIsLoading(false)
@@ -80,7 +82,11 @@ export default function AccountPage() {
 
       const { error } = await supabase
         .from('profiles')
-        .update({ full_name: fullName })
+        .update({
+          first_name: firstName,
+          last_name: lastName,
+          full_name: `${firstName} ${lastName}`.trim()
+        })
         .eq('id', user.id)
 
       if (error) throw error
@@ -204,15 +210,27 @@ export default function AccountPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Enter your name"
-                  className="mt-1"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name</Label>
+                  <Input
+                    id="firstName"
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    placeholder="John"
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <Input
+                    id="lastName"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Doe"
+                    className="mt-1"
+                  />
+                </div>
               </div>
               {nameMessage && (
                 <p className={`text-sm ${nameMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>

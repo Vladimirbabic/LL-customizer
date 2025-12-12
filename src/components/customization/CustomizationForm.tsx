@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Download, ArrowLeft, X, FileText, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check, Undo2 } from 'lucide-react'
+import { Save, Download, ArrowLeft, X, FileText, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check, Undo2, CheckCircle2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 interface PromptHistoryItem {
@@ -89,6 +89,7 @@ export function CustomizationForm({
   const [attachedImage, setAttachedImage] = useState<string | null>(null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false)
+  const [showPdfSuccess, setShowPdfSuccess] = useState(false)
 
   // Check if any values have content (from profile or template values)
   const hasValues = Object.values(values).some(v => v && v.trim())
@@ -154,6 +155,7 @@ export function CustomizationForm({
 
         if (newHtml) {
           setRenderedHtml(newHtml)
+          setHasUnsavedChanges(true) // Trigger auto-save after AI change
         }
 
         // Add system response with HTML snapshot for revert
@@ -186,6 +188,7 @@ export function CustomizationForm({
         const data = await response.json()
         const newHtml = data.html
         setRenderedHtml(newHtml)
+        setHasUnsavedChanges(true) // Trigger auto-save after AI change
 
         // Add system response with HTML snapshot for revert
         const systemResponse: PromptHistoryItem = {
@@ -456,6 +459,9 @@ export function CustomizationForm({
       document.body.removeChild(a)
       URL.revokeObjectURL(url)
 
+      // Show success modal
+      setShowPdfSuccess(true)
+
     } catch (error) {
       console.error('PDF generation error:', error)
       setSaveError('Failed to generate PDF. Please try again.')
@@ -502,6 +508,32 @@ export function CustomizationForm({
 
   return (
     <div className="fixed inset-0 bg-[#141414] z-50 flex flex-col">
+      {/* PDF Success Modal */}
+      {showPdfSuccess && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/60"
+            onClick={() => setShowPdfSuccess(false)}
+          />
+          <div className="relative bg-[#1e1e1e] rounded-2xl border border-white/10 p-6 max-w-sm mx-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-6 h-6 text-green-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-white mb-2">Your PDF is ready!</h3>
+            <p className="text-sm text-gray-400 mb-6">
+              Your file has been downloaded successfully.
+            </p>
+            <Button
+              variant="primary"
+              onClick={() => setShowPdfSuccess(false)}
+              className="w-full"
+            >
+              OK
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-[#1e1e1e] border-b border-white/5 px-2 sm:px-4 py-2 sm:py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
@@ -536,15 +568,15 @@ export function CustomizationForm({
                 <Pencil className="w-3 h-3 text-gray-500 group-hover:text-[#f5d5d5] transition-colors opacity-0 group-hover:opacity-100" />
               </button>
             )}
-            {hasUnsavedChanges && !isEditingName && (
-              <p className="text-xs text-gray-500">Unsaved changes</p>
-            )}
           </div>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
+          {hasUnsavedChanges && !isEditingName && (
+            <span className="text-xs text-gray-500 hidden sm:inline">Unsaved changes</span>
+          )}
           {saveSuccess && (
-            <span className="text-xs sm:text-sm text-green-400 mr-1 sm:mr-2 hidden sm:inline">Saved!</span>
+            <span className="text-xs sm:text-sm text-green-400 hidden sm:inline">Saved!</span>
           )}
           <Button
             variant="outline"

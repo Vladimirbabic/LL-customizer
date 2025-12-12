@@ -17,7 +17,8 @@ import {
 interface Profile {
   id: string
   email: string
-  full_name: string | null
+  first_name: string | null
+  last_name: string | null
   role: 'user' | 'admin'
 }
 
@@ -165,7 +166,15 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
               )}
             >
               <span className="text-sm font-medium">
-                {profile?.full_name || profile?.email?.split('@')[0]}
+                {profile?.first_name || profile?.email?.split('@')[0]}
+              </span>
+              <span className={cn(
+                "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                isDark
+                  ? "bg-white/10 text-gray-400"
+                  : "bg-gray-200 text-gray-500"
+              )}>
+                alpha
               </span>
               <ChevronDown className={cn(
                 "w-4 h-4 transition-transform",
@@ -273,8 +282,16 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
             "py-3 px-6 border-t",
             isDark ? "border-white/10" : "border-gray-100"
           )}>
-            <div className={cn("text-sm font-medium mb-3", isDark ? "text-white" : "text-gray-900")}>
-              {profile?.full_name || profile?.email?.split('@')[0]}
+            <div className={cn("flex items-center gap-2 text-sm font-medium mb-3", isDark ? "text-white" : "text-gray-900")}>
+              <span>{profile?.first_name || profile?.email?.split('@')[0]}</span>
+              <span className={cn(
+                "text-[10px] font-medium px-1.5 py-0.5 rounded",
+                isDark
+                  ? "bg-white/10 text-gray-400"
+                  : "bg-gray-200 text-gray-500"
+              )}>
+                alpha
+              </span>
             </div>
             <div className="space-y-1">
               <Link

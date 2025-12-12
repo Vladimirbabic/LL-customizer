@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
-import { Settings, Sparkles, Check } from 'lucide-react'
+import { Settings, Sparkles, Check, MessageSquare } from 'lucide-react'
 
 type AIProvider = 'anthropic' | 'openai'
 
 interface SettingsData {
   provider: AIProvider
+  systemPrompt: string
 }
 
 function DarkCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
@@ -21,6 +22,7 @@ function DarkCard({ children, className = '' }: { children: React.ReactNode; cla
 
 export default function AdminSettingsPage() {
   const [provider, setProvider] = useState<AIProvider>('anthropic')
+  const [systemPrompt, setSystemPrompt] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
@@ -33,6 +35,7 @@ export default function AdminSettingsPage() {
         if (response.ok) {
           const result = await response.json()
           setProvider(result.data?.value?.provider || 'anthropic')
+          setSystemPrompt(result.data?.value?.systemPrompt || '')
         }
       } catch (err) {
         console.error('Error fetching settings:', err)
@@ -55,7 +58,7 @@ export default function AdminSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           key: 'ai_provider',
-          value: { provider }
+          value: { provider, systemPrompt }
         })
       })
 
@@ -94,57 +97,81 @@ export default function AdminSettingsPage() {
       <DarkCard className="p-6">
         <div className="flex items-center gap-2 mb-6">
           <Sparkles className="w-5 h-5 text-[#f5d5d5]" />
-          <h2 className="text-lg font-medium text-white">AI Provider</h2>
+          <h2 className="text-lg font-medium text-white">AI Settings</h2>
         </div>
 
-        <p className="text-sm text-gray-400 mb-6">
-          Choose which AI provider to use for template customization. Both providers offer similar capabilities.
-        </p>
+        {/* AI Provider Section */}
+        <div className="mb-8">
+          <h3 className="text-sm font-medium text-gray-300 mb-3">AI Provider</h3>
+          <p className="text-sm text-gray-400 mb-4">
+            Choose which AI provider to use for template customization.
+          </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Anthropic Option */}
-          <button
-            onClick={() => setProvider('anthropic')}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              provider === 'anthropic'
-                ? 'border-[#f5d5d5] bg-[#f5d5d5]/10'
-                : 'border-white/10 hover:border-white/20'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white font-medium">Anthropic Claude</span>
-              {provider === 'anthropic' && (
-                <div className="w-5 h-5 rounded-full bg-[#f5d5d5] flex items-center justify-center">
-                  <Check className="w-3 h-3 text-[#141414]" />
-                </div>
-              )}
-            </div>
-            <p className="text-sm text-gray-400">
-              Claude Sonnet 4 - Advanced reasoning and natural language understanding
-            </p>
-          </button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Anthropic Option */}
+            <button
+              onClick={() => setProvider('anthropic')}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                provider === 'anthropic'
+                  ? 'border-[#f5d5d5] bg-[#f5d5d5]/10'
+                  : 'border-white/10 hover:border-white/20'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white font-medium">Anthropic Claude</span>
+                {provider === 'anthropic' && (
+                  <div className="w-5 h-5 rounded-full bg-[#f5d5d5] flex items-center justify-center">
+                    <Check className="w-3 h-3 text-[#141414]" />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-400">
+                Claude Sonnet 4 - Advanced reasoning and natural language understanding
+              </p>
+            </button>
 
-          {/* OpenAI Option */}
-          <button
-            onClick={() => setProvider('openai')}
-            className={`p-4 rounded-xl border-2 text-left transition-all ${
-              provider === 'openai'
-                ? 'border-[#f5d5d5] bg-[#f5d5d5]/10'
-                : 'border-white/10 hover:border-white/20'
-            }`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-white font-medium">OpenAI</span>
-              {provider === 'openai' && (
-                <div className="w-5 h-5 rounded-full bg-[#f5d5d5] flex items-center justify-center">
-                  <Check className="w-3 h-3 text-[#141414]" />
-                </div>
-              )}
-            </div>
-            <p className="text-sm text-gray-400">
-              GPT-4o - Fast and capable for template generation
-            </p>
-          </button>
+            {/* OpenAI Option */}
+            <button
+              onClick={() => setProvider('openai')}
+              className={`p-4 rounded-xl border-2 text-left transition-all ${
+                provider === 'openai'
+                  ? 'border-[#f5d5d5] bg-[#f5d5d5]/10'
+                  : 'border-white/10 hover:border-white/20'
+              }`}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-white font-medium">OpenAI</span>
+                {provider === 'openai' && (
+                  <div className="w-5 h-5 rounded-full bg-[#f5d5d5] flex items-center justify-center">
+                    <Check className="w-3 h-3 text-[#141414]" />
+                  </div>
+                )}
+              </div>
+              <p className="text-sm text-gray-400">
+                GPT-4o - Fast and capable for template generation
+              </p>
+            </button>
+          </div>
+        </div>
+
+        {/* System Prompt Section */}
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <MessageSquare className="w-4 h-4 text-gray-400" />
+            <h3 className="text-sm font-medium text-gray-300">System Prompt</h3>
+          </div>
+          <p className="text-sm text-gray-400 mb-4">
+            This prompt will be included with every AI request for template personalization. Use it to define brand voice, style guidelines, or specific instructions.
+          </p>
+          <textarea
+            value={systemPrompt}
+            onChange={(e) => setSystemPrompt(e.target.value)}
+            placeholder="Example: Always maintain a professional tone. Use warm, welcoming language. Ensure contact information is prominently displayed..."
+            className="w-full h-32 px-4 py-3 bg-[#2a2a2a] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#f5d5d5]/50 focus:ring-1 focus:ring-[#f5d5d5]/50 transition-colors resize-none"
+          />
+          <p className="text-xs text-gray-500 mt-2">
+            {systemPrompt.length} characters
+          </p>
         </div>
 
         {error && (

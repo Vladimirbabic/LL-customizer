@@ -52,6 +52,13 @@
   }
 }
 
+.loader-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
 .loader-text {
   display: flex;
   align-items: center;
@@ -60,6 +67,15 @@
   font-weight: 400;
   color: white;
   letter-spacing: 0.05em;
+  min-height: 1.5em;
+}
+
+.loader-subtitle {
+  font-size: 0.8em;
+  font-weight: 400;
+  color: #f5d5d5;
+  opacity: 0.8;
+  letter-spacing: 0.02em;
 }
 
 .loader-letter {

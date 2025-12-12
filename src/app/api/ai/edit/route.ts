@@ -1,7 +1,99 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
+import OAuth from 'oauth-1.0a'
+import crypto from 'crypto'
 import { createClient } from '@/lib/supabase/server'
+
+// Noun Project API configuration
+const NOUN_PROJECT_API_KEY = process.env.NOUN_PROJECT_API_KEY
+const NOUN_PROJECT_API_SECRET = process.env.NOUN_PROJECT_API_SECRET
+const NOUN_PROJECT_BASE_URL = 'https://api.thenounproject.com/v2'
+
+function getNounProjectOAuth() {
+  return new OAuth({
+    consumer: {
+      key: NOUN_PROJECT_API_KEY!,
+      secret: NOUN_PROJECT_API_SECRET!,
+    },
+    signature_method: 'HMAC-SHA1',
+    hash_function(base_string, key) {
+      return crypto.createHmac('sha1', key).update(base_string).digest('base64')
+    },
+  })
+}
+
+// Search for icons from Noun Project
+async function searchIcons(query: string, limit: number = 5): Promise<Array<{ id: number; term: string; preview_url: string }>> {
+  if (!NOUN_PROJECT_API_KEY || !NOUN_PROJECT_API_SECRET) {
+    console.warn('Noun Project API not configured')
+    return []
+  }
+
+  try {
+    const params = new URLSearchParams({
+      query,
+      limit: limit.toString(),
+      thumbnail_size: '84',
+    })
+
+    const url = `${NOUN_PROJECT_BASE_URL}/icon?${params.toString()}`
+    const oauth = getNounProjectOAuth()
+    const authHeader = oauth.toHeader(oauth.authorize({ url, method: 'GET' }))
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { ...authHeader, Accept: 'application/json' },
+    })
+
+    if (!response.ok) return []
+
+    const data = await response.json()
+    return (data.icons || []).map((icon: { id: number; term: string; thumbnail_url: string }) => ({
+      id: icon.id,
+      term: icon.term,
+      preview_url: icon.thumbnail_url,
+    }))
+  } catch (error) {
+    console.error('Error searching icons:', error)
+    return []
+  }
+}
+
+// Download icon SVG from Noun Project
+async function downloadIconSvg(iconId: number, color: string = '000000'): Promise<string | null> {
+  if (!NOUN_PROJECT_API_KEY || !NOUN_PROJECT_API_SECRET) {
+    return null
+  }
+
+  try {
+    const params = new URLSearchParams({
+      color: color.replace('#', ''),
+      filetype: 'svg',
+    })
+
+    const url = `${NOUN_PROJECT_BASE_URL}/icon/${iconId}/download?${params.toString()}`
+    const oauth = getNounProjectOAuth()
+    const authHeader = oauth.toHeader(oauth.authorize({ url, method: 'GET' }))
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: { ...authHeader, Accept: 'application/json' },
+    })
+
+    if (!response.ok) return null
+
+    const data = await response.json()
+    // The API returns base64-encoded SVG
+    if (data.base64_encoded_file) {
+      return Buffer.from(data.base64_encoded_file, 'base64').toString('utf-8')
+    }
+    return null
+  } catch (error) {
+    console.error('Error downloading icon:', error)
+    return null
+  }
+}
 
 // Lazy initialization
 let anthropicClient: Anthropic | null = null
@@ -23,7 +115,12 @@ function getOpenAIClient(): OpenAI {
 
 type AIProvider = 'anthropic' | 'openai'
 
-async function getAIProvider(): Promise<AIProvider> {
+interface AISettings {
+  provider: AIProvider
+  systemPrompt: string
+}
+
+async function getAISettings(): Promise<AISettings> {
   try {
     const supabase = await createClient()
     const { data } = await supabase
@@ -31,9 +128,12 @@ async function getAIProvider(): Promise<AIProvider> {
       .select('value')
       .eq('key', 'ai_provider')
       .single()
-    return data?.value?.provider || 'anthropic'
+    return {
+      provider: data?.value?.provider || 'anthropic',
+      systemPrompt: data?.value?.systemPrompt || ''
+    }
   } catch {
-    return 'anthropic'
+    return { provider: 'anthropic', systemPrompt: '' }
   }
 }
 
@@ -102,6 +202,20 @@ const tools = [
       },
       required: ['old_href', 'new_href']
     }
+  },
+  {
+    name: 'insert_icon',
+    description: 'Search for and insert an icon from Noun Project. Use this when the user wants to add an icon to represent something (e.g., phone icon, email icon, home icon, checkmark, etc.). The icon will be inserted as an inline SVG.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        search_query: { type: 'string', description: 'Search term for the icon (e.g., "phone", "email", "house", "checkmark")' },
+        color: { type: 'string', description: 'Icon color in hex format without # (e.g., "000000" for black, "ffffff" for white, "ff5500" for orange). Default is black.' },
+        replace_text: { type: 'string', description: 'Text in the HTML to replace with the icon. The icon will be inserted in place of this text.' },
+        size: { type: 'string', description: 'Icon size (width and height). Default is "24px".' }
+      },
+      required: ['search_query', 'replace_text']
+    }
   }
 ]
 
@@ -121,7 +235,7 @@ interface ToolCall {
   input: Record<string, unknown>
 }
 
-function executeTools(html: string, toolCalls: ToolCall[]): string {
+async function executeTools(html: string, toolCalls: ToolCall[]): Promise<string> {
   let result = html
 
   for (const call of toolCalls) {
@@ -168,6 +282,32 @@ function executeTools(html: string, toolCalls: ToolCall[]): string {
         }
         break
       }
+      case 'insert_icon': {
+        const { search_query, color = '000000', replace_text, size = '24px' } = call.input as {
+          search_query: string
+          color?: string
+          replace_text: string
+          size?: string
+        }
+        if (search_query && replace_text) {
+          // Search for icons
+          const icons = await searchIcons(search_query, 3)
+          if (icons.length > 0) {
+            // Download the first matching icon
+            const svg = await downloadIconSvg(icons[0].id, color.replace('#', ''))
+            if (svg) {
+              // Add size styling to the SVG
+              const styledSvg = svg.replace(
+                '<svg',
+                `<svg style="width: ${size}; height: ${size}; display: inline-block; vertical-align: middle;"`
+              )
+              // Replace the text with the icon
+              result = result.split(replace_text).join(styledSvg)
+            }
+          }
+        }
+        break
+      }
     }
   }
 
@@ -175,7 +315,11 @@ function executeTools(html: string, toolCalls: ToolCall[]): string {
 }
 
 // Call Anthropic with tools
-async function callAnthropicWithTools(prompt: string, html: string): Promise<ToolCall[]> {
+async function callAnthropicWithTools(prompt: string, html: string, customSystemPrompt: string): Promise<ToolCall[]> {
+  const additionalGuidelines = customSystemPrompt
+    ? `\n\nADDITIONAL GUIDELINES:\n${customSystemPrompt}`
+    : ''
+
   const systemPrompt = `You are an HTML editor assistant. Analyze the user's request and use the provided tools to make changes to the HTML.
 
 IMPORTANT RULES:
@@ -183,6 +327,7 @@ IMPORTANT RULES:
 2. For replace_text, use the EXACT text from the HTML (case-sensitive)
 3. You can call multiple tools if needed
 4. Only make the changes the user requested
+5. You have access to the insert_icon tool to add icons from Noun Project. Use this when the user asks for icons or when it would enhance the design (e.g., adding a phone icon next to a phone number, email icon next to email, etc.)${additionalGuidelines}
 
 HTML to edit:
 ${html}`
@@ -210,7 +355,11 @@ ${html}`
 }
 
 // Call OpenAI with tools
-async function callOpenAIWithTools(prompt: string, html: string): Promise<ToolCall[]> {
+async function callOpenAIWithTools(prompt: string, html: string, customSystemPrompt: string): Promise<ToolCall[]> {
+  const additionalGuidelines = customSystemPrompt
+    ? `\n\nADDITIONAL GUIDELINES:\n${customSystemPrompt}`
+    : ''
+
   const systemPrompt = `You are an HTML editor assistant. Analyze the user's request and use the provided tools to make changes to the HTML.
 
 IMPORTANT RULES:
@@ -218,6 +367,7 @@ IMPORTANT RULES:
 2. For replace_text, use the EXACT text from the HTML (case-sensitive)
 3. You can call multiple tools if needed
 4. Only make the changes the user requested
+5. You have access to the insert_icon tool to add icons from Noun Project. Use this when the user asks for icons or when it would enhance the design (e.g., adding a phone icon next to a phone number, email icon next to email, etc.)${additionalGuidelines}
 
 HTML to edit:
 ${html}`
@@ -263,12 +413,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'HTML content and prompt are required' }, { status: 400 })
     }
 
-    const provider = await getAIProvider()
+    const { provider, systemPrompt } = await getAISettings()
 
     // Get tool calls from AI
     const toolCalls = provider === 'openai'
-      ? await callOpenAIWithTools(userPrompt, htmlContent)
-      : await callAnthropicWithTools(userPrompt, htmlContent)
+      ? await callOpenAIWithTools(userPrompt, htmlContent, systemPrompt)
+      : await callAnthropicWithTools(userPrompt, htmlContent, systemPrompt)
 
     if (toolCalls.length === 0) {
       // No tools called, return original HTML
@@ -280,7 +430,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Execute the tool calls
-    const modifiedHtml = executeTools(htmlContent, toolCalls)
+    const modifiedHtml = await executeTools(htmlContent, toolCalls)
 
     // Return result with info about what changed
     return NextResponse.json({

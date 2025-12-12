@@ -116,7 +116,7 @@ export const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
 
     const LoadingOverlay = () => (
       <div className="absolute inset-0 bg-[#141414]/90 flex items-center justify-center z-10">
-        <AiLoader text="Generating" />
+        <AiLoader />
       </div>
     )
 

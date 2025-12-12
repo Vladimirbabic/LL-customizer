@@ -1,6 +1,9 @@
-import chromium from '@sparticuz/chromium'
+import chromium from '@sparticuz/chromium-min'
 import puppeteer from 'puppeteer-core'
 import ImageKit from 'imagekit'
+
+// Remote chromium URL for serverless environments
+const CHROMIUM_URL = 'https://github.com/nicktcode/chromium-bin-aws/releases/download/v137.0.0-v138.0.0-v139.0.0-v140.0.0-v141.0.0/chromium-v141.0.0.tar'
 
 // Lazy initialization to avoid build errors when env vars are missing
 let imagekitClient: ImageKit | null = null
@@ -29,7 +32,7 @@ export async function generateThumbnail(html: string, name?: string): Promise<Th
     // Launch headless browser with serverless-compatible Chrome
     browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(CHROMIUM_URL),
       headless: true,
     })
 

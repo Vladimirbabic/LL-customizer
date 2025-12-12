@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
-    "@sparticuz/chromium": "^143.0.0",
+    "@sparticuz/chromium-min": "^143.0.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.87.1",
     "class-variance-authority": "^0.7.1",

@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import chromium from '@sparticuz/chromium'
+import chromium from '@sparticuz/chromium-min'
 import puppeteer from 'puppeteer-core'
+
+// Remote chromium URL for serverless environments
+const CHROMIUM_URL = 'https://github.com/nicktcode/chromium-bin-aws/releases/download/v137.0.0-v138.0.0-v139.0.0-v140.0.0-v141.0.0/chromium-v141.0.0.tar'
 
 export async function POST(request: NextRequest) {
   let browser = null
@@ -15,7 +18,7 @@ export async function POST(request: NextRequest) {
     // Launch headless browser with serverless-compatible Chrome
     browser = await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath(),
+      executablePath: await chromium.executablePath(CHROMIUM_URL),
       headless: true,
     })
 

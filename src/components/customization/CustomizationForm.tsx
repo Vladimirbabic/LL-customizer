@@ -235,10 +235,10 @@ export function CustomizationForm({
     setRenderedHtml(htmlSnapshot)
     setHasUnsavedChanges(true) // Trigger auto-save
 
-    // Add a system message noting the revert
+    // Add a system message noting the version load
     const revertMessage: PromptHistoryItem = {
       id: `revert-${Date.now()}`,
-      prompt: 'Reverted to previous state',
+      prompt: 'Loaded previous version',
       timestamp: new Date(),
       type: 'system',
       htmlSnapshot: htmlSnapshot
@@ -248,7 +248,7 @@ export function CustomizationForm({
     // Add to change log
     const newChange: ChangeLogItem = {
       id: `change-${Date.now()}`,
-      description: 'Reverted to previous state',
+      description: 'Loaded previous version',
       timestamp: new Date()
     }
     setChangeLog(prev => [...prev, newChange])
@@ -730,7 +730,7 @@ export function CustomizationForm({
                                 className="flex items-center gap-1 text-[10px] text-[#f5d5d5]/70 hover:text-[#f5d5d5] transition-colors"
                               >
                                 <Undo2 className="w-3 h-3" />
-                                Revert
+                                Load this version
                               </button>
                             )}
                           </div>

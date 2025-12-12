@@ -360,7 +360,8 @@ IMPORTANT RULES:
 - You can call multiple tools for complex requests
 - Only make changes the user explicitly requested
 - When uncertain about placement, prefer the most prominent/visible location
-- DO NOT add new content (images, phone numbers, icons, etc.) unless explicitly asked - only replace existing placeholders${additionalGuidelines}
+- DO NOT add new content (images, phone numbers, icons, etc.) unless explicitly asked - only replace existing placeholders
+- SINGLE PAGE CONSTRAINT: This template MUST fit on one letter-size page (8.5" x 11"). Do NOT add content that would cause overflow. Keep text concise.${additionalGuidelines}
 
 HTML to edit:
 ${html}`
@@ -433,7 +434,8 @@ IMPORTANT RULES:
 - You can call multiple tools for complex requests
 - Only make changes the user explicitly requested
 - When uncertain about placement, prefer the most prominent/visible location
-- DO NOT add new content (images, phone numbers, icons, etc.) unless explicitly asked - only replace existing placeholders${additionalGuidelines}
+- DO NOT add new content (images, phone numbers, icons, etc.) unless explicitly asked - only replace existing placeholders
+- SINGLE PAGE CONSTRAINT: This template MUST fit on one letter-size page (8.5" x 11"). Do NOT add content that would cause overflow. Keep text concise.${additionalGuidelines}
 
 HTML to edit:
 ${html}`

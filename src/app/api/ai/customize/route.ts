@@ -240,6 +240,7 @@ OUTPUT RULES:
 - Do NOT use markdown code blocks
 - ONLY output raw HTML code
 - If inserting the attached image, use exactly this URL: ${image}
+- SINGLE PAGE CONSTRAINT: This template MUST fit on one letter-size page (8.5" x 11"). Do NOT add content that would cause overflow.
 
 OUTPUT:`
   } else {
@@ -257,6 +258,7 @@ OUTPUT RULES:
 - Do NOT ask questions
 - Do NOT use markdown code blocks
 - ONLY output raw HTML code
+- SINGLE PAGE CONSTRAINT: This template MUST fit on one letter-size page (8.5" x 11"). Do NOT add content that would cause overflow.
 
 OUTPUT:`
   }
@@ -329,6 +331,7 @@ OUTPUT RULES:
 - Do NOT ask questions
 - Do NOT use markdown code blocks
 - ONLY output raw HTML code
+- SINGLE PAGE CONSTRAINT: This template MUST fit on one letter-size page (8.5" x 11"). Do NOT add content that would cause overflow. Keep replacement text concise.
 
 OUTPUT:`
 

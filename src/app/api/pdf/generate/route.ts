@@ -57,8 +57,33 @@ export async function POST(request: NextRequest) {
       deviceScaleFactor: 2,
     })
 
+    // Inject CSS to ensure single page and prevent overflow
+    const singlePageCss = `
+      <style>
+        @page {
+          size: letter;
+          margin: 0;
+        }
+        html, body {
+          max-height: 11in !important;
+          overflow: hidden !important;
+          page-break-after: avoid !important;
+          page-break-before: avoid !important;
+          page-break-inside: avoid !important;
+        }
+        * {
+          page-break-inside: avoid !important;
+        }
+      </style>
+    `
+
+    // Inject single-page CSS into HTML
+    const htmlWithConstraints = html.includes('</head>')
+      ? html.replace('</head>', `${singlePageCss}</head>`)
+      : `${singlePageCss}${html}`
+
     // Set the HTML content
-    await page.setContent(html, {
+    await page.setContent(htmlWithConstraints, {
       waitUntil: ['load', 'networkidle0'],
     })
 

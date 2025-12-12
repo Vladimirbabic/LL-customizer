@@ -1,77 +1,84 @@
 .loader-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  font-family: "Inter", sans-serif;
+  user-select: none;
+}
+
+.loader-logo {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 180px;
-  height: 180px;
-  font-family: "Inter", sans-serif;
-  font-size: 1.2em;
-  font-weight: 300;
-  color: white;
-  border-radius: 50%;
-  background-color: transparent;
-  user-select: none;
 }
 
-.loader {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 50%;
-  background-color: transparent;
-  animation: loader-rotate 2s linear infinite;
-  z-index: 0;
+.claude-logo {
+  animation: logo-pulse 2s ease-in-out infinite;
 }
 
-@keyframes loader-rotate {
-  0% {
-    transform: rotate(90deg);
-    box-shadow:
-      0 10px 20px 0 #fff inset,
-      0 20px 30px 0 #ad5fff inset,
-      0 60px 60px 0 #471eec inset;
+@keyframes logo-pulse {
+  0%, 100% {
+    opacity: 0.6;
+    transform: scale(1);
   }
   50% {
-    transform: rotate(270deg);
-    box-shadow:
-      0 10px 20px 0 #fff inset,
-      0 20px 10px 0 #d60a47 inset,
-      0 40px 60px 0 #311e80 inset;
+    opacity: 1;
+    transform: scale(1.1);
   }
-  100% {
-    transform: rotate(450deg);
-    box-shadow:
-      0 10px 20px 0 #fff inset,
-      0 20px 30px 0 #ad5fff inset,
-      0 60px 60px 0 #471eec inset;
+}
+
+/* Glow effect behind logo */
+.loader-logo::before {
+  content: '';
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(circle, rgba(217, 119, 87, 0.3) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.5;
+    transform: scale(1);
   }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+.loader-text {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1em;
+  font-weight: 400;
+  color: white;
+  letter-spacing: 0.05em;
 }
 
 .loader-letter {
   display: inline-block;
   opacity: 0.4;
-  transform: translateY(0);
   animation: loader-letter-anim 2s infinite;
-  z-index: 1;
-  border-radius: 50ch;
-  border: none;
 }
 
 @keyframes loader-letter-anim {
-  0%,
-  100% {
+  0%, 100% {
     opacity: 0.4;
     transform: translateY(0);
   }
   20% {
     opacity: 1;
-    transform: scale(1.15);
+    transform: scale(1.1);
   }
   40% {
-    opacity: 0.7;
+    opacity: 0.6;
     transform: translateY(0);
   }
 }

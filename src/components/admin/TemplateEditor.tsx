@@ -90,6 +90,10 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
   const [newCampaignName, setNewCampaignName] = useState('')
   const [newCampaignColor, setNewCampaignColor] = useState('#f5d5d5')
   const [isCreatingCampaign, setIsCreatingCampaign] = useState(false)
+  const [editingCampaignId, setEditingCampaignId] = useState<string | null>(null)
+  const [editCampaignName, setEditCampaignName] = useState('')
+  const [editCampaignColor, setEditCampaignColor] = useState('')
+  const [isSavingCampaign, setIsSavingCampaign] = useState(false)
 
   // UI state
   const [isSaving, setIsSaving] = useState(false)
@@ -155,6 +159,52 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
     } finally {
       setIsCreatingCampaign(false)
     }
+  }
+
+  const handleStartEditCampaign = (campaign: Campaign) => {
+    setEditingCampaignId(campaign.id)
+    setEditCampaignName(campaign.name)
+    setEditCampaignColor(campaign.color)
+    setShowNewCampaignForm(false)
+  }
+
+  const handleSaveCampaign = async () => {
+    if (!editingCampaignId || !editCampaignName.trim()) return
+
+    setIsSavingCampaign(true)
+    try {
+      const response = await fetch(`/api/campaigns/${editingCampaignId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: editCampaignName,
+          color: editCampaignColor,
+        }),
+      })
+
+      const result = await response.json()
+      if (response.ok) {
+        setCampaigns(campaigns.map(c =>
+          c.id === editingCampaignId
+            ? { ...c, name: editCampaignName, color: editCampaignColor }
+            : c
+        ))
+        setEditingCampaignId(null)
+      } else {
+        setError(result.error || 'Failed to update campaign')
+      }
+    } catch (err) {
+      console.error('Error updating campaign:', err)
+      setError('Failed to update campaign')
+    } finally {
+      setIsSavingCampaign(false)
+    }
+  }
+
+  const handleCancelEditCampaign = () => {
+    setEditingCampaignId(null)
+    setEditCampaignName('')
+    setEditCampaignColor('')
   }
 
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -675,15 +725,80 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
               )}
 
               {campaignId && campaigns.find((c) => c.id === campaignId) && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: campaigns.find((c) => c.id === campaignId)?.color }}
-                  />
-                  <span className="text-gray-400">
-                    {campaigns.find((c) => c.id === campaignId)?.name}
-                  </span>
-                </div>
+                editingCampaignId === campaignId ? (
+                  <div className="p-3 bg-[#2a2a2a] rounded-lg border border-white/5 space-y-3">
+                    <div className="space-y-2">
+                      <Label>Campaign Name</Label>
+                      <Input
+                        value={editCampaignName}
+                        onChange={(e) => setEditCampaignName(e.target.value)}
+                        placeholder="Campaign name"
+                        autoFocus
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Color</Label>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="color"
+                          value={editCampaignColor}
+                          onChange={(e) => setEditCampaignColor(e.target.value)}
+                          className="w-10 h-10 rounded border border-white/10 bg-transparent cursor-pointer"
+                        />
+                        <Input
+                          value={editCampaignColor}
+                          onChange={(e) => setEditCampaignColor(e.target.value)}
+                          className="flex-1"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleSaveCampaign}
+                        disabled={!editCampaignName.trim() || isSavingCampaign}
+                        className="flex-1"
+                      >
+                        {isSavingCampaign ? (
+                          <>
+                            <Spinner size="sm" className="mr-2" />
+                            Saving...
+                          </>
+                        ) : (
+                          'Save'
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleCancelEditCampaign}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const campaign = campaigns.find((c) => c.id === campaignId)
+                      if (campaign) handleStartEditCampaign(campaign)
+                    }}
+                    className="flex items-center gap-2 text-sm group hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
+                  >
+                    <span
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: campaigns.find((c) => c.id === campaignId)?.color }}
+                    />
+                    <span className="text-gray-400 group-hover:text-white transition-colors">
+                      {campaigns.find((c) => c.id === campaignId)?.name}
+                    </span>
+                    <span className="text-gray-600 text-xs group-hover:text-gray-400 transition-colors">
+                      (click to edit)
+                    </span>
+                  </button>
+                )
               )}
             </div>
           </CardContent>

@@ -1,4 +1,5 @@
-import puppeteer from 'puppeteer'
+import chromium from '@sparticuz/chromium'
+import puppeteer from 'puppeteer-core'
 import ImageKit from 'imagekit'
 
 // Lazy initialization to avoid build errors when env vars are missing
@@ -25,10 +26,11 @@ export async function generateThumbnail(html: string, name?: string): Promise<Th
   let browser = null
 
   try {
-    // Launch headless browser
+    // Launch headless browser with serverless-compatible Chrome
     browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     })
 
     const page = await browser.newPage()

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import puppeteer from 'puppeteer'
+import chromium from '@sparticuz/chromium'
+import puppeteer from 'puppeteer-core'
 
 export async function POST(request: NextRequest) {
   let browser = null
@@ -11,10 +12,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'HTML content is required' }, { status: 400 })
     }
 
-    // Launch headless browser
+    // Launch headless browser with serverless-compatible Chrome
     browser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
       headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox'],
     })
 
     const page = await browser.newPage()

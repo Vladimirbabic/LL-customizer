@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import { TemplateWithFields } from '@/types'
 import { LivePreview, LivePreviewHandle } from './LivePreview'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { Save, Download, ArrowLeft, X, FileText, Sparkles, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check } from 'lucide-react'
+import { Save, Download, ArrowLeft, X, FileText, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 interface PromptHistoryItem {
@@ -782,7 +783,13 @@ export function CustomizationForm({
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-4 h-4 mr-2" />
+                      <Image
+                        src="/claude-loading-animation.svg"
+                        alt="Claude"
+                        width={16}
+                        height={16}
+                        className="mr-2"
+                      />
                       Generate with Claude
                     </>
                   )}

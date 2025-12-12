@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import chromium from '@sparticuz/chromium-min'
 import puppeteer from 'puppeteer-core'
 
-// Remote chromium URL for serverless environments
-const CHROMIUM_URL = 'https://github.com/nicktcode/chromium-bin-aws/releases/download/v137.0.0-v138.0.0-v139.0.0-v140.0.0-v141.0.0/chromium-v141.0.0.tar'
+// Remote chromium URL for serverless environments (must match @sparticuz/chromium-min version)
+const CHROMIUM_URL = 'https://github.com/Sparticuz/chromium/releases/download/v143.0.0/chromium-v143.0.0-pack.x64.tar'
 
 // Local Chrome paths for development
 const LOCAL_CHROME_PATHS = {

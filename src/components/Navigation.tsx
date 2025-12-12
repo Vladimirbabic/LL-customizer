@@ -116,7 +116,7 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
           </Link>
           <div className={cn(
             "hidden sm:flex items-center gap-1.5 text-xs",
-            isDark ? "text-gray-500" : "text-gray-400"
+            isDark ? "text-[#f5d5d5]/50" : "text-[#c4a090]"
           )}>
             <span>Powered by</span>
             <Image

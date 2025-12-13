@@ -281,7 +281,7 @@ export function FieldInputSidebar({
 
             {/* Step 1 */}
             <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded bg-[#D97757] text-white text-xs font-medium">Step 1</span>
+              <span className="px-2 py-0.5 rounded bg-white/10 text-gray-400 text-xs font-medium">Step 1</span>
               <h4 className="text-base font-medium text-white">Copy prompt and edit in Claude</h4>
             </div>
 
@@ -320,11 +320,13 @@ export function FieldInputSidebar({
             </div>
 
             {/* Divider */}
-            <div className="border-t border-white/5" />
+            <div className="py-4">
+              <div className="border-t border-white/5" />
+            </div>
 
             {/* Step 2 */}
             <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded bg-[#D97757] text-white text-xs font-medium">Step 2</span>
+              <span className="px-2 py-0.5 rounded bg-white/10 text-gray-400 text-xs font-medium">Step 2</span>
               <h4 className="text-base font-medium text-white">Convert Claude HTML to Print-Ready PDF</h4>
             </div>
 

@@ -373,38 +373,27 @@ export function FieldInputSidebar({
               </Button>
             </div>
           ) : (
-            // Step Wizard View
-            <div className="p-6">
-              {/* Progress Bar */}
-              <div className="mb-6">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-[#D97757]">
-                    Step {currentStep + 1} of {totalSteps}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {Math.round(((currentStep + 1) / totalSteps) * 100)}% complete
-                  </span>
-                </div>
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#D97757] transition-all duration-300 rounded-full"
-                    style={{ width: `${((currentStep + 1) / totalSteps) * 100}%` }}
-                  />
-                </div>
+            // Step Wizard View - 15% padding on each side
+            <div className="py-8 px-[15%]">
+              {/* Step indicator */}
+              <div className="text-center mb-8">
+                <span className="text-sm font-medium text-white">
+                  Step {currentStep + 1} of {totalSteps}
+                </span>
               </div>
 
-              {/* Step Indicators */}
-              <div className="flex justify-center gap-1.5 mb-6">
+              {/* Step Dots */}
+              <div className="flex justify-center gap-3 mb-8">
                 {sortedFields.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentStep(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
+                    className={`transition-all duration-300 rounded-full ${
                       index === currentStep
-                        ? 'bg-[#D97757] w-6'
+                        ? 'w-8 h-2.5 bg-[#D97757]'
                         : index < currentStep
-                        ? 'bg-[#D97757]/50'
-                        : 'bg-white/20'
+                        ? 'w-2.5 h-2.5 bg-[#D97757]'
+                        : 'w-2.5 h-2.5 bg-white/20 hover:bg-white/30'
                     }`}
                   />
                 ))}
@@ -423,57 +412,52 @@ export function FieldInputSidebar({
 
                   {/* Field hint */}
                   {currentField.placeholder && (
-                    <p className="text-xs text-gray-500 italic px-1">
+                    <p className="text-xs text-gray-500 italic">
                       Tip: {currentField.placeholder}
                     </p>
                   )}
+
+                  {/* Navigation Buttons - right below the box */}
+                  <div className="flex gap-3 pt-2">
+                    <Button
+                      variant="outline"
+                      onClick={handlePrev}
+                      disabled={currentStep === 0}
+                      className="flex-1"
+                    >
+                      <ChevronLeft className="w-4 h-4 mr-1" />
+                      Back
+                    </Button>
+                    {currentStep === totalSteps - 1 ? (
+                      <Button
+                        onClick={handleGeneratePrompt}
+                        className="flex-1 bg-[#D97757] text-white hover:bg-[#C96747]"
+                      >
+                        Generate Prompt
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={handleNext}
+                        className="flex-1 bg-[#D97757] text-white hover:bg-[#C96747]"
+                      >
+                        Next
+                        <ChevronRight className="w-4 h-4 ml-1" />
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Skip to Generate */}
+                  <button
+                    onClick={handleGeneratePrompt}
+                    className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors pt-2"
+                  >
+                    Skip and generate prompt now
+                  </button>
                 </div>
               )}
             </div>
           )}
         </div>
-
-        {/* Footer Navigation */}
-        {!isLoading && !showLoader && !isPromptGenerated && sortedFields.length > 0 && (
-          <div className="p-4 border-t border-white/5 space-y-3">
-            {/* Navigation Buttons */}
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handlePrev}
-                disabled={currentStep === 0}
-                className="flex-1"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Back
-              </Button>
-              {currentStep === totalSteps - 1 ? (
-                <Button
-                  onClick={handleGeneratePrompt}
-                  className="flex-1 bg-[#D97757] text-white hover:bg-[#C96747]"
-                >
-                  Generate Prompt
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleNext}
-                  className="flex-1 bg-[#D97757] text-white hover:bg-[#C96747]"
-                >
-                  Next
-                  <ChevronRight className="w-4 h-4 ml-1" />
-                </Button>
-              )}
-            </div>
-
-            {/* Skip to Generate */}
-            <button
-              onClick={handleGeneratePrompt}
-              className="w-full text-xs text-gray-500 hover:text-gray-300 transition-colors py-1"
-            >
-              Skip and generate prompt now
-            </button>
-          </div>
-        )}
       </div>
     </>
   )

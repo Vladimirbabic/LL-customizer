@@ -50,10 +50,10 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
         </div>
       </div>
 
-      {/* Main Content - Swapped: Fields on left, Preview on right */}
+      {/* Main Content - 50/50 split */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Field Input Sidebar (Left) - Desktop */}
-        <div className="w-[420px] shrink-0 hidden md:block">
+        {/* Field Input (Left) - Desktop - 50% */}
+        <div className="w-1/2 shrink-0 hidden md:block">
           <FieldInputSidebar
             templateId={template.id}
             templateName={template.name}
@@ -67,8 +67,8 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
           />
         </div>
 
-        {/* Preview (Right) */}
-        <div className="flex-1 overflow-hidden border-l border-white/5">
+        {/* Preview (Right) - 50% */}
+        <div className="w-1/2 overflow-hidden border-l border-white/5">
           <StaticPreview htmlContent={template.html_content} />
         </div>
 

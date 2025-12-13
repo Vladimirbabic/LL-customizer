@@ -27,7 +27,8 @@ interface ProfileField {
 interface ProfileData {
   profile: {
     profile_completed: boolean
-    full_name: string | null
+    first_name: string | null
+    last_name: string | null
   }
   fields: ProfileField[]
   valuesByKey: Record<string, string>

@@ -86,7 +86,6 @@ export default function AccountPage() {
         .update({
           first_name: firstName,
           last_name: lastName,
-          full_name: `${firstName} ${lastName}`.trim()
         })
         .eq('id', user.id)
 

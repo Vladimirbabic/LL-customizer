@@ -81,7 +81,7 @@ export default function AdminUsersPage() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
                       <div className="text-sm font-medium text-white">
-                        {user.full_name || 'No name'}
+                        {user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name || user.email}
                       </div>
                       <div className="text-sm text-gray-500">{user.email}</div>
                     </div>

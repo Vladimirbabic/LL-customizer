@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Copy, Check, Loader2, FileDown, FileCode } from 'lucide-react'
 import { TemplateField } from '@/types/database'
@@ -126,6 +127,7 @@ export function FieldInputSidebar({
     try {
       await navigator.clipboard.writeText(generatedPrompt)
       setCopied(true)
+      toast.success('Prompt copied to clipboard')
       window.open('https://claude.ai/new', '_blank')
 
       // Reset copied state after delay
@@ -134,6 +136,7 @@ export function FieldInputSidebar({
       }, 1500)
     } catch (err) {
       console.error('Failed to copy:', err)
+      toast.error('Failed to copy prompt')
     }
   }
 

@@ -16,6 +16,7 @@ interface PromptInput {
   templateFieldValues: Record<string, string>
   profileFields: ProfileField[]
   profileValues: Record<string, string>
+  systemPrompt?: string
 }
 
 const PROFILE_CATEGORY_LABELS: Record<string, string> = {
@@ -51,13 +52,25 @@ export function generateClaudePrompt(input: PromptInput): string {
     templateFieldValues,
     profileFields,
     profileValues,
+    systemPrompt,
   } = input
 
   // Collect image URLs from template fields
   const imageUrls: Array<{ label: string; url: string }> = []
 
   // Build prompt
-  let prompt = `# Template Customization Request
+  let prompt = ''
+
+  // Add system prompt if provided
+  if (systemPrompt && systemPrompt.trim()) {
+    prompt += `${systemPrompt.trim()}
+
+---
+
+`
+  }
+
+  prompt += `# Template Customization Request
 
 Create an HTML artifact with the customized template that I can preview directly in this chat.
 

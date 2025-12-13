@@ -26,6 +26,7 @@ const updateTemplateSchema = z.object({
   thumbnail_url: z.string().url().optional().nullable().or(z.literal('')),
   is_active: z.boolean().optional(),
   campaign_id: z.string().uuid().optional().nullable(),
+  system_prompt_id: z.string().uuid().optional().nullable(),
   fields: z.array(fieldSchema).optional(),
 })
 
@@ -43,7 +44,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       .from('listing_templates')
       .select(`
         *,
-        listing_template_fields (*)
+        listing_template_fields (*),
+        system_prompts (*)
       `)
       .eq('id', id)
       .single()
@@ -72,8 +74,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const transformedTemplate = {
       ...template,
       template_fields: templateFields,
+      system_prompt: template.system_prompts || null,
     }
     delete transformedTemplate.listing_template_fields
+    delete transformedTemplate.system_prompts
 
     return NextResponse.json({ data: transformedTemplate })
   } catch (error) {
@@ -152,6 +156,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (templateData.thumbnail_url !== undefined) updateData.thumbnail_url = templateData.thumbnail_url || null
     if (templateData.is_active !== undefined) updateData.is_active = templateData.is_active
     if (templateData.campaign_id !== undefined) updateData.campaign_id = templateData.campaign_id || null
+    if (templateData.system_prompt_id !== undefined) updateData.system_prompt_id = templateData.system_prompt_id || null
 
     if (Object.keys(updateData).length > 0) {
       const { error: updateError } = await supabase

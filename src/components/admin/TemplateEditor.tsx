@@ -23,6 +23,14 @@ import {
 } from 'lucide-react'
 import { TemplateFieldsEditor, TemplateFieldData } from './TemplateFieldsEditor'
 
+interface SystemPrompt {
+  id: string
+  name: string
+  description: string | null
+  prompt_content: string
+  is_active: boolean
+}
+
 interface TemplateEditorProps {
   template?: TemplateWithFields
   isNew?: boolean
@@ -39,6 +47,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
   const [thumbnailUrl, setThumbnailUrl] = useState(template?.thumbnail_url || '')
   const [isActive, setIsActive] = useState(template?.is_active ?? true)
   const [campaignId, setCampaignId] = useState<string | null>((template as TemplateWithFields & { campaign_id?: string })?.campaign_id || null)
+  const [systemPromptId, setSystemPromptId] = useState<string | null>((template as TemplateWithFields & { system_prompt_id?: string })?.system_prompt_id || null)
   const [templateFields, setTemplateFields] = useState<TemplateFieldData[]>(() => {
     return (template?.template_fields || []).map((f, i) => ({
       id: f.id,
@@ -56,6 +65,10 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
   // Campaign state
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [isLoadingCampaigns, setIsLoadingCampaigns] = useState(false)
+
+  // System prompts state
+  const [systemPrompts, setSystemPrompts] = useState<SystemPrompt[]>([])
+  const [isLoadingPrompts, setIsLoadingPrompts] = useState(false)
   const [showNewCampaignForm, setShowNewCampaignForm] = useState(false)
   const [newCampaignName, setNewCampaignName] = useState('')
   const [newCampaignColor, setNewCampaignColor] = useState('#f5d5d5')
@@ -75,7 +88,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false)
   const thumbnailInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch campaigns on mount
+  // Fetch campaigns and system prompts on mount
   useEffect(() => {
     const fetchCampaigns = async () => {
       setIsLoadingCampaigns(true)
@@ -91,7 +104,24 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
         setIsLoadingCampaigns(false)
       }
     }
+
+    const fetchSystemPrompts = async () => {
+      setIsLoadingPrompts(true)
+      try {
+        const response = await fetch('/api/prompts')
+        const result = await response.json()
+        if (response.ok) {
+          setSystemPrompts(result.data || [])
+        }
+      } catch (err) {
+        console.error('Error fetching system prompts:', err)
+      } finally {
+        setIsLoadingPrompts(false)
+      }
+    }
+
     fetchCampaigns()
+    fetchSystemPrompts()
   }, [])
 
   const handleCreateCampaign = async () => {
@@ -284,6 +314,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
           thumbnail_url: thumbnailUrl || null,
           is_active: isActive,
           campaign_id: campaignId,
+          system_prompt_id: systemPromptId,
           fields: templateFields.map((f) => ({
             field_key: f.field_key,
             field_type: f.field_type,
@@ -687,6 +718,46 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                     </span>
                   </button>
                 )
+              )}
+            </div>
+
+            {/* System Prompt Selection */}
+            <div className="space-y-2 pt-2 border-t border-white/5">
+              <Label>System Prompt</Label>
+              <p className="text-xs text-gray-500 -mt-1">
+                Select a system prompt to customize how Claude generates content for this template
+              </p>
+              {isLoadingPrompts ? (
+                <div className="flex items-center justify-center py-4">
+                  <Spinner size="sm" />
+                </div>
+              ) : (
+                <Select
+                  value={systemPromptId || ''}
+                  onChange={(e) => setSystemPromptId(e.target.value || null)}
+                >
+                  <option value="">No system prompt (use default)</option>
+                  {systemPrompts.map((prompt) => (
+                    <option key={prompt.id} value={prompt.id}>
+                      {prompt.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
+              {systemPromptId && systemPrompts.find((p) => p.id === systemPromptId) && (
+                <div className="p-3 bg-[#2a2a2a] rounded-lg border border-white/5">
+                  <p className="text-xs text-gray-400 mb-2">
+                    {systemPrompts.find((p) => p.id === systemPromptId)?.description || 'No description'}
+                  </p>
+                  <details className="group">
+                    <summary className="text-xs text-[#f5d5d5] cursor-pointer hover:text-white">
+                      View prompt content
+                    </summary>
+                    <pre className="mt-2 p-2 bg-[#1e1e1e] rounded text-xs text-gray-400 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto dark-scrollbar">
+                      {systemPrompts.find((p) => p.id === systemPromptId)?.prompt_content}
+                    </pre>
+                  </details>
+                </div>
               )}
             </div>
           </CardContent>

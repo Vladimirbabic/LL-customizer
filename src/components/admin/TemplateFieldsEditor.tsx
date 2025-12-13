@@ -15,7 +15,7 @@ interface FieldOption {
 export interface TemplateFieldData {
   id?: string
   field_key: string
-  field_type: 'text' | 'textarea' | 'select'
+  field_type: 'text' | 'textarea' | 'select' | 'url'
   label: string
   placeholder?: string | null
   default_value?: string | null
@@ -33,6 +33,7 @@ const FIELD_TYPES = [
   { value: 'text', label: 'Text Input' },
   { value: 'textarea', label: 'Text Area' },
   { value: 'select', label: 'Dropdown' },
+  { value: 'url', label: 'Link/URL' },
 ]
 
 // Generate a unique ID

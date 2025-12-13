@@ -15,8 +15,15 @@ interface ProfileField {
   category?: string
 }
 
+interface SystemPrompt {
+  id: string
+  name: string
+  description: string | null
+  prompt_content: string
+}
+
 interface PromptGeneratorProps {
-  template: TemplateWithFields
+  template: TemplateWithFields & { system_prompt?: SystemPrompt | null }
   profileFields: ProfileField[]
   profileValues: Record<string, string>
 }
@@ -60,6 +67,7 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
             templateFields={template.template_fields}
             profileFields={profileFields}
             profileValues={profileValues}
+            systemPrompt={template.system_prompt?.prompt_content}
           />
         </div>
 
@@ -73,6 +81,7 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
             templateFields={template.template_fields}
             profileFields={profileFields}
             profileValues={profileValues}
+            systemPrompt={template.system_prompt?.prompt_content}
           />
         </div>
       </div>

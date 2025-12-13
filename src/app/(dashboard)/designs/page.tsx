@@ -93,13 +93,13 @@ export default function DesignsPage() {
 
       {/* Search and Filters */}
       <div className="mb-6 space-y-3">
-        <div className="relative">
+        <div className="relative max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search designs..."
-            className="pl-10"
+            placeholder="Search..."
+            className="pl-9 h-9 text-sm"
           />
         </div>
 

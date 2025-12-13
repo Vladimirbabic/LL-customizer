@@ -50,9 +50,9 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
         </div>
       </div>
 
-      {/* Main Content - 50/50 split */}
+      {/* Main Content - 50/50 split on desktop, full width on mobile */}
       <div className="flex-1 flex overflow-hidden">
-        {/* Field Input (Left) - Desktop - 50% */}
+        {/* Field Input (Left) - Desktop only - 50% */}
         <div className="w-1/2 shrink-0 hidden md:block">
           <FieldInputSidebar
             templateId={template.id}
@@ -67,25 +67,25 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
           />
         </div>
 
-        {/* Preview (Right) - 50% */}
-        <div className="w-1/2 overflow-hidden border-l border-white/5">
+        {/* Preview - Full width on mobile, 50% on desktop */}
+        <div className="w-full md:w-1/2 overflow-hidden md:border-l border-white/5 pb-[70vh] md:pb-0">
           <StaticPreview htmlContent={template.html_content} />
         </div>
+      </div>
 
-        {/* Mobile: Bottom sheet for fields */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#1e1e1e] border-t border-white/5 max-h-[70vh] overflow-y-auto">
-          <FieldInputSidebar
-            templateId={template.id}
-            templateName={template.name}
-            templateSize={template.size || '8.5x11 inches'}
-            htmlContent={template.html_content}
-            templateFields={template.template_fields}
-            profileFields={profileFields}
-            profileValues={profileValues}
-            systemPrompt={template.system_prompt?.prompt_content}
-            templatePrompt={template.template_prompt}
-          />
-        </div>
+      {/* Mobile: Bottom sheet for fields */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#1e1e1e] border-t border-white/5 h-[70vh] overflow-y-auto dark-scrollbar">
+        <FieldInputSidebar
+          templateId={template.id}
+          templateName={template.name}
+          templateSize={template.size || '8.5x11 inches'}
+          htmlContent={template.html_content}
+          templateFields={template.template_fields}
+          profileFields={profileFields}
+          profileValues={profileValues}
+          systemPrompt={template.system_prompt?.prompt_content}
+          templatePrompt={template.template_prompt}
+        />
       </div>
     </div>
   )

@@ -86,6 +86,11 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
   const thumbnailGenerationRef = useRef<NodeJS.Timeout | null>(null)
   const lastHtmlRef = useRef<string>('')
 
+  // Description generation state
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false)
+  const descriptionGenerationRef = useRef<NodeJS.Timeout | null>(null)
+  const lastHtmlForDescRef = useRef<string>('')
+
   // Fetch campaigns and system prompts on mount
   useEffect(() => {
     const fetchCampaigns = async () => {
@@ -175,6 +180,59 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
       }
     }
   }, [htmlContent, generateThumbnail])
+
+  // Auto-generate description when HTML content changes (only if description is empty)
+  const generateDescription = useCallback(async (html: string) => {
+    if (!html.trim() || html === lastHtmlForDescRef.current) return
+
+    lastHtmlForDescRef.current = html
+    setIsGeneratingDescription(true)
+
+    try {
+      const response = await fetch('/api/description/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          html,
+          name: name || '',
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate description')
+      }
+
+      setDescription(result.description)
+    } catch (err) {
+      console.error('Description generation error:', err)
+    } finally {
+      setIsGeneratingDescription(false)
+    }
+  }, [name])
+
+  // Debounced description generation when HTML changes (only if description is empty)
+  useEffect(() => {
+    // Only auto-generate if description is empty
+    if (!htmlContent.trim() || description.trim()) return
+
+    // Clear any pending generation
+    if (descriptionGenerationRef.current) {
+      clearTimeout(descriptionGenerationRef.current)
+    }
+
+    // Debounce: wait 2 seconds after user stops typing
+    descriptionGenerationRef.current = setTimeout(() => {
+      generateDescription(htmlContent)
+    }, 2000)
+
+    return () => {
+      if (descriptionGenerationRef.current) {
+        clearTimeout(descriptionGenerationRef.current)
+      }
+    }
+  }, [htmlContent, description, generateDescription])
 
   const handleCreateCampaign = async () => {
     if (!newCampaignName.trim()) return
@@ -357,13 +415,24 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
 
             <div className="space-y-2">
               <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="A brief description of this template..."
-                rows={2}
-              />
+              <div className="relative">
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="A brief description of this template..."
+                  rows={2}
+                  disabled={isGeneratingDescription}
+                />
+                {isGeneratingDescription && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-[#2a2a2a]/80 rounded-xl">
+                    <div className="flex items-center gap-2 text-gray-400">
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span className="text-sm">Generating...</span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <p className="text-xs text-gray-500">
                 Leave empty and OpenAI will generate a description for you.
               </p>

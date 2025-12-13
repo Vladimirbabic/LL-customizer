@@ -100,7 +100,7 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
         ? "border-white/10 bg-[#141414]/80"
         : "border-gray-200/60 bg-white/80"
     )}>
-      <div className="h-full max-w-screen-xl mx-auto px-6 flex items-center">
+      <div className="h-full w-full px-6 flex items-center">
         {/* Logo - Left */}
         <div className="flex-1 flex items-center gap-4">
           <Link

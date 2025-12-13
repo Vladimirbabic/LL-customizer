@@ -312,19 +312,20 @@ export function FieldInputSidebar({
               </Button>
             </div>
 
-            {/* Convert to PDF button - shows when panel is closed */}
-            {!showPdfPanel && (
-              <button
-                onClick={() => setShowPdfPanel(true)}
-                className="w-full mt-4 text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center justify-center gap-1.5"
-              >
-                <FileDown className="w-3 h-3" />
-                Convert HTML to PDF
-              </button>
-            )}
           </div>
         ) : null}
       </div>
+
+      {/* Convert to PDF button - fixed at bottom when panel is closed */}
+      {!showPdfPanel && isPromptGenerated && (
+        <button
+          onClick={() => setShowPdfPanel(true)}
+          className="absolute bottom-4 left-0 right-0 mx-auto w-fit text-xs text-gray-500 hover:text-gray-300 transition-colors flex items-center justify-center gap-1.5 px-3 py-2"
+        >
+          <FileDown className="w-3 h-3" />
+          Convert HTML to PDF
+        </button>
+      )}
 
       {/* PDF Conversion Panel - Slides up from bottom */}
       <div

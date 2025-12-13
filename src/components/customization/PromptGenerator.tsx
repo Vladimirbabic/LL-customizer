@@ -23,7 +23,7 @@ interface SystemPrompt {
 }
 
 interface PromptGeneratorProps {
-  template: TemplateWithFields & { system_prompt?: SystemPrompt | null }
+  template: TemplateWithFields & { system_prompt?: SystemPrompt | null; template_prompt?: string | null }
   profileFields: ProfileField[]
   profileValues: Record<string, string>
 }
@@ -68,6 +68,7 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
             profileFields={profileFields}
             profileValues={profileValues}
             systemPrompt={template.system_prompt?.prompt_content}
+            templatePrompt={template.template_prompt}
           />
         </div>
 
@@ -82,6 +83,7 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
             profileFields={profileFields}
             profileValues={profileValues}
             systemPrompt={template.system_prompt?.prompt_content}
+            templatePrompt={template.template_prompt}
           />
         </div>
       </div>

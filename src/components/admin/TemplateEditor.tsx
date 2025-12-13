@@ -48,6 +48,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
   const [isActive, setIsActive] = useState(template?.is_active ?? true)
   const [campaignId, setCampaignId] = useState<string | null>((template as TemplateWithFields & { campaign_id?: string })?.campaign_id || null)
   const [systemPromptId, setSystemPromptId] = useState<string | null>((template as TemplateWithFields & { system_prompt_id?: string })?.system_prompt_id || null)
+  const [templatePrompt, setTemplatePrompt] = useState((template as TemplateWithFields & { template_prompt?: string })?.template_prompt || '')
   const [templateFields, setTemplateFields] = useState<TemplateFieldData[]>(() => {
     return (template?.template_fields || []).map((f, i) => ({
       id: f.id,
@@ -315,6 +316,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
           is_active: isActive,
           campaign_id: campaignId,
           system_prompt_id: systemPromptId,
+          template_prompt: templatePrompt || null,
           fields: templateFields.map((f) => ({
             field_key: f.field_key,
             field_type: f.field_type,
@@ -785,6 +787,32 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
           </CardContent>
         </Card>
       </div>
+
+      {/* Template Prompt */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Template Prompt</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="templatePrompt">
+              Custom Instructions for This Template
+            </Label>
+            <p className="text-xs text-gray-500">
+              Add specific instructions that will be included in the generated prompt for Claude.
+              This is useful for template-specific guidance like tone, style, or special formatting requirements.
+            </p>
+            <Textarea
+              id="templatePrompt"
+              value={templatePrompt}
+              onChange={(e) => setTemplatePrompt(e.target.value)}
+              placeholder="e.g., Use a professional and warm tone. Emphasize the property's unique features. Keep the text concise and impactful..."
+              rows={8}
+              className="font-mono text-sm"
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Template Fields */}
       <Card>

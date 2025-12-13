@@ -17,6 +17,7 @@ interface PromptInput {
   profileFields: ProfileField[]
   profileValues: Record<string, string>
   systemPrompt?: string
+  templatePrompt?: string
 }
 
 const PROFILE_CATEGORY_LABELS: Record<string, string> = {
@@ -53,6 +54,7 @@ export function generateClaudePrompt(input: PromptInput): string {
     profileFields,
     profileValues,
     systemPrompt,
+    templatePrompt,
   } = input
 
   // Collect image URLs from template fields
@@ -64,6 +66,16 @@ export function generateClaudePrompt(input: PromptInput): string {
   // Add system prompt if provided
   if (systemPrompt && systemPrompt.trim()) {
     prompt += `${systemPrompt.trim()}
+
+---
+
+`
+  }
+
+  // Add template-specific prompt if provided
+  if (templatePrompt && templatePrompt.trim()) {
+    prompt += `## Template-Specific Instructions
+${templatePrompt.trim()}
 
 ---
 

@@ -26,6 +26,7 @@ const createTemplateSchema = z.object({
   is_active: z.boolean().optional().default(true),
   campaign_id: z.string().uuid().optional().nullable(),
   system_prompt_id: z.string().uuid().optional().nullable(),
+  template_prompt: z.string().optional().nullable(),
   fields: z.array(fieldSchema).optional(),
 })
 
@@ -122,6 +123,7 @@ export async function POST(request: NextRequest) {
         is_active: templateData.is_active,
         campaign_id: templateData.campaign_id || null,
         system_prompt_id: templateData.system_prompt_id || null,
+        template_prompt: templateData.template_prompt || null,
       })
       .select()
       .single()

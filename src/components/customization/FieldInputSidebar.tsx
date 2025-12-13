@@ -26,6 +26,7 @@ interface FieldInputSidebarProps {
   profileFields: ProfileField[]
   profileValues: Record<string, string>
   systemPrompt?: string
+  templatePrompt?: string | null
 }
 
 export function FieldInputSidebar({
@@ -37,6 +38,7 @@ export function FieldInputSidebar({
   profileFields,
   profileValues,
   systemPrompt,
+  templatePrompt,
 }: FieldInputSidebarProps) {
   // Initialize with default values from template fields
   const [values, setValues] = useState<Record<string, string>>(() => {
@@ -185,6 +187,7 @@ export function FieldInputSidebar({
       profileFields,
       profileValues,
       systemPrompt,
+      templatePrompt: templatePrompt || undefined,
     })
     setGeneratedPrompt(prompt)
 

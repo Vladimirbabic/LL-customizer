@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import { Copy, Check, Loader2, Upload, FileDown, X } from 'lucide-react'
+import { Copy, Check, Loader2, FileDown, X, FileCode } from 'lucide-react'
 import { TemplateField } from '@/types/database'
 import { generateClaudePrompt } from '@/lib/prompt-generator'
 
@@ -54,9 +54,10 @@ export function FieldInputSidebar({
   // PDF conversion state
   const [showPdfPanel, setShowPdfPanel] = useState(false)
   const [uploadedHtml, setUploadedHtml] = useState('')
+  const [uploadedFileName, setUploadedFileName] = useState('')
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [pdfError, setPdfError] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const loaderSteps = [
     'Adding your brand information',
@@ -138,9 +139,27 @@ export function FieldInputSidebar({
     }
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setPdfError('')
+    setUploadedFileName(file.name)
+
+    const reader = new FileReader()
+    reader.onload = (event) => {
+      const content = event.target?.result as string
+      setUploadedHtml(content)
+    }
+    reader.onerror = () => {
+      setPdfError('Failed to read file')
+    }
+    reader.readAsText(file)
+  }
+
   const handleGeneratePdf = async () => {
     if (!uploadedHtml.trim()) {
-      setPdfError('Please paste your HTML code from Claude')
+      setPdfError('Please upload an HTML file first')
       return
     }
 
@@ -317,18 +336,33 @@ export function FieldInputSidebar({
             </button>
           </div>
 
-          {/* Textarea for HTML input */}
-          <div className="flex-1 min-h-0">
-            <textarea
-              ref={textareaRef}
-              value={uploadedHtml}
-              onChange={(e) => {
-                setUploadedHtml(e.target.value)
-                setPdfError('')
-              }}
-              placeholder="Paste your HTML code from Claude here..."
-              className="w-full h-full bg-[#141414] border border-white/10 rounded-lg p-3 text-xs text-gray-300 font-mono resize-none focus:outline-none focus:border-[#D97757]/50 placeholder:text-gray-600"
+          {/* File Upload Area */}
+          <div className="flex-1 min-h-0 flex flex-col">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".html,.htm"
+              onChange={handleFileUpload}
+              className="hidden"
             />
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 border-2 border-dashed border-white/10 rounded-lg flex flex-col items-center justify-center gap-2 hover:border-[#D97757]/50 hover:bg-white/5 transition-all cursor-pointer"
+            >
+              {uploadedFileName ? (
+                <>
+                  <FileCode className="w-8 h-8 text-[#D97757]" />
+                  <span className="text-sm text-white font-medium">{uploadedFileName}</span>
+                  <span className="text-xs text-gray-500">Click to change file</span>
+                </>
+              ) : (
+                <>
+                  <FileCode className="w-8 h-8 text-gray-500" />
+                  <span className="text-sm text-gray-400">Upload HTML file</span>
+                  <span className="text-xs text-gray-600">Click to browse</span>
+                </>
+              )}
+            </button>
           </div>
 
           {/* Error message */}

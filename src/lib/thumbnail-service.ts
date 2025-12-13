@@ -64,11 +64,12 @@ export async function generateThumbnail(html: string, name?: string): Promise<Th
 
     const page = await browser.newPage()
 
-    // Set viewport for thumbnail - smaller size for faster rendering
+    // Set viewport to match letter size (8.5x11 inches at 96 DPI = 816x1056)
+    // Using a larger width to ensure full template renders properly
     await page.setViewport({
-      width: 400,
-      height: 520,
-      deviceScaleFactor: 2,
+      width: 816,
+      height: 1056,
+      deviceScaleFactor: 1.5, // Higher resolution for quality
     })
 
     // Set the HTML content
@@ -96,17 +97,17 @@ export async function generateThumbnail(html: string, name?: string): Promise<Th
     })
 
     // Additional wait for rendering
-    await new Promise((resolve) => setTimeout(resolve, 300))
+    await new Promise((resolve) => setTimeout(resolve, 500))
 
-    // Take screenshot
+    // Take screenshot of the top portion for thumbnail (16:9 aspect ratio crop from top)
     const screenshotBuffer = await page.screenshot({
       type: 'jpeg',
-      quality: 85,
+      quality: 90,
       clip: {
         x: 0,
         y: 0,
-        width: 400,
-        height: 520,
+        width: 816,
+        height: 459, // 16:9 aspect ratio (816 / 16 * 9 = 459)
       },
     })
 

@@ -1,4 +1,9 @@
-export * from './CustomizationForm'
+export * from './PromptGenerator'
+export * from './StaticPreview'
+export * from './FieldInputSidebar'
 export * from './FieldRenderer'
-export * from './LivePreview'
 export * from './fields'
+
+// Legacy exports (kept for backwards compatibility)
+export * from './CustomizationForm'
+export * from './LivePreview'

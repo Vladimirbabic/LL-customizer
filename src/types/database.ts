@@ -31,6 +31,7 @@ export interface Database {
           html_content: string
           thumbnail_url: string | null
           is_active: boolean
+          size: string | null
           created_at: string
           updated_at: string
         }
@@ -41,6 +42,7 @@ export interface Database {
           html_content: string
           thumbnail_url?: string | null
           is_active?: boolean
+          size?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -51,6 +53,7 @@ export interface Database {
           html_content?: string
           thumbnail_url?: string | null
           is_active?: boolean
+          size?: string | null
           created_at?: string
           updated_at?: string
         }

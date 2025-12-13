@@ -21,6 +21,7 @@ import {
   Link as LinkIcon,
   Wand2,
 } from 'lucide-react'
+import { TemplateFieldsEditor, TemplateFieldData } from './TemplateFieldsEditor'
 
 interface TemplateEditorProps {
   template?: TemplateWithFields
@@ -33,10 +34,24 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
   // Form state
   const [name, setName] = useState(template?.name || '')
   const [description, setDescription] = useState(template?.description || '')
+  const [size, setSize] = useState(template?.size || '8.5x11 inches')
   const [htmlContent, setHtmlContent] = useState(template?.html_content || '')
   const [thumbnailUrl, setThumbnailUrl] = useState(template?.thumbnail_url || '')
   const [isActive, setIsActive] = useState(template?.is_active ?? true)
   const [campaignId, setCampaignId] = useState<string | null>((template as TemplateWithFields & { campaign_id?: string })?.campaign_id || null)
+  const [templateFields, setTemplateFields] = useState<TemplateFieldData[]>(() => {
+    return (template?.template_fields || []).map((f, i) => ({
+      id: f.id,
+      field_key: f.field_key,
+      field_type: f.field_type as 'text' | 'textarea' | 'select',
+      label: f.label,
+      placeholder: f.placeholder,
+      default_value: f.default_value,
+      options: f.options as { label: string; value: string }[] | null,
+      is_required: f.is_required,
+      display_order: f.display_order ?? i,
+    }))
+  })
 
   // Campaign state
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
@@ -264,10 +279,21 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
         body: JSON.stringify({
           name,
           description: description || null,
+          size: size || '8.5x11 inches',
           html_content: htmlContent,
           thumbnail_url: thumbnailUrl || null,
           is_active: isActive,
           campaign_id: campaignId,
+          fields: templateFields.map((f) => ({
+            field_key: f.field_key,
+            field_type: f.field_type,
+            label: f.label,
+            placeholder: f.placeholder || null,
+            default_value: f.default_value || null,
+            options: f.options,
+            is_required: f.is_required,
+            display_order: f.display_order,
+          })),
         }),
       })
 
@@ -341,6 +367,29 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                 placeholder="A brief description of this template..."
                 rows={2}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="size" required>Print Size</Label>
+              <Select
+                id="size"
+                value={size}
+                onChange={(e) => setSize(e.target.value)}
+              >
+                <option value="8.5x11 inches">8.5 x 11 inches (Letter)</option>
+                <option value="8.5x14 inches">8.5 x 14 inches (Legal)</option>
+                <option value="11x17 inches">11 x 17 inches (Tabloid)</option>
+                <option value="A4">A4 (210 x 297 mm)</option>
+                <option value="A5">A5 (148 x 210 mm)</option>
+                <option value="5x7 inches">5 x 7 inches</option>
+                <option value="4x6 inches">4 x 6 inches (Postcard)</option>
+                <option value="6x9 inches">6 x 9 inches</option>
+                <option value="9x12 inches">9 x 12 inches</option>
+                <option value="custom">Custom (specify in description)</option>
+              </Select>
+              <p className="text-xs text-gray-500">
+                This size will be included in the generated prompt to ensure Claude creates content that fits this printable size.
+              </p>
             </div>
 
             <div className="space-y-2">
@@ -666,6 +715,15 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
         </Card>
       </div>
 
+      {/* Template Fields */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Template Fields</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <TemplateFieldsEditor fields={templateFields} onChange={setTemplateFields} />
+        </CardContent>
+      </Card>
     </div>
   )
 }

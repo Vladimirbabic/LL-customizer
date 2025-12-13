@@ -31,8 +31,8 @@ export function SelectField({ field, value, onChange, error }: SelectFieldProps)
         error={!!error}
       >
         <option value="">Select an option</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
+        {options.map((option, index) => (
+          <option key={index} value={option.label}>
             {option.label}
           </option>
         ))}

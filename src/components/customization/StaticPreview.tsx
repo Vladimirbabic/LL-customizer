@@ -68,6 +68,9 @@ export function StaticPreview({ htmlContent }: StaticPreviewProps) {
   const scaledWidth = LETTER_WIDTH * scale
   const scaledHeight = LETTER_HEIGHT * scale
 
+  // Calculate responsive border radius (20px at scale 1, down to 8px at smaller scales)
+  const borderRadius = Math.max(8, Math.round(20 * scale))
+
   return (
     <div
       ref={containerRef}
@@ -91,7 +94,7 @@ export function StaticPreview({ htmlContent }: StaticPreviewProps) {
         style={{
           width: `${scaledWidth}px`,
           height: `${scaledHeight}px`,
-          borderRadius: '20px',
+          borderRadius: `${borderRadius}px`,
           overflow: 'hidden',
         }}
       >

@@ -276,12 +276,25 @@ export function FieldInputSidebar({
           // Generated Prompt View - 10% padding left/right
           <div className="py-8 px-[10%] space-y-6">
             {/* Success Header */}
-            <div className="text-center pb-4">
-              <div className="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-3">
-                <Check className="w-6 h-6 text-green-500" />
+            <div className="pb-4">
+              {/* Mobile: horizontal layout */}
+              <div className="flex md:hidden items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-500/15 flex items-center justify-center shrink-0">
+                  <Check className="w-5 h-5 text-green-500" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-base font-semibold text-white">Your prompt is ready</h3>
+                  <p className="text-sm text-gray-400">See two steps below</p>
+                </div>
               </div>
-              <h3 className="text-lg font-semibold text-white">Your prompt is ready</h3>
-              <p className="text-sm text-gray-400 mt-1">See two steps below</p>
+              {/* Desktop: centered layout */}
+              <div className="hidden md:block text-center">
+                <div className="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-3">
+                  <Check className="w-6 h-6 text-green-500" />
+                </div>
+                <h3 className="text-lg font-semibold text-white">Your prompt is ready</h3>
+                <p className="text-sm text-gray-400 mt-1">See two steps below</p>
+              </div>
             </div>
 
             {/* Divider */}

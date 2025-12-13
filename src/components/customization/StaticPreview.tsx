@@ -49,18 +49,16 @@ export function StaticPreview({ htmlContent }: StaticPreviewProps) {
   }, [htmlContent, updateIframeHeight])
 
   return (
-    <div className="h-full flex flex-col bg-[#1a1a1a]">
-      <div className="flex items-center justify-between px-4 py-2 bg-[#1a1a1a] border-b border-white/5 shrink-0">
-        <span className="text-sm font-medium text-gray-300">Template Preview</span>
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="sm" onClick={handleZoomOut} disabled={scale <= MIN_ZOOM}>
-            <ZoomOut className="w-4 h-4" />
-          </Button>
-          <span className="text-xs text-gray-400 w-12 text-center">{Math.round(scale * 100)}%</span>
-          <Button variant="ghost" size="sm" onClick={handleZoomIn} disabled={scale >= MAX_ZOOM}>
-            <ZoomIn className="w-4 h-4" />
-          </Button>
-        </div>
+    <div className="h-full flex flex-col bg-[#1a1a1a] relative">
+      {/* Zoom Controls - floating with shadow */}
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-[#2a2a2a] rounded-lg px-2 py-1 shadow-lg border border-white/10">
+        <Button variant="ghost" size="sm" onClick={handleZoomOut} disabled={scale <= MIN_ZOOM} className="h-8 w-8 p-0">
+          <ZoomOut className="w-4 h-4" />
+        </Button>
+        <span className="text-xs text-gray-400 w-12 text-center">{Math.round(scale * 100)}%</span>
+        <Button variant="ghost" size="sm" onClick={handleZoomIn} disabled={scale >= MAX_ZOOM} className="h-8 w-8 p-0">
+          <ZoomIn className="w-4 h-4" />
+        </Button>
       </div>
       <div className="flex-1 overflow-auto bg-[#1a1a1a] p-6 dark-scrollbar">
         <div className="flex justify-center">
@@ -71,8 +69,8 @@ export function StaticPreview({ htmlContent }: StaticPreviewProps) {
             }}
           >
             <div
-              className="bg-white shadow-lg rounded-lg overflow-hidden"
-              style={{ width: `${LETTER_WIDTH}px`, minHeight: '600px' }}
+              className="bg-white shadow-2xl overflow-hidden"
+              style={{ width: `${LETTER_WIDTH}px`, minHeight: '600px', borderRadius: '20px' }}
             >
               <iframe
                 ref={iframeRef}

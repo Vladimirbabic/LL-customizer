@@ -316,14 +316,14 @@ export function FieldInputSidebar({
               </div>
             </div>
           ) : isPromptGenerated ? (
-            // Generated Prompt View
-            <div className="p-6 space-y-4">
+            // Generated Prompt View - 10% padding left/right
+            <div className="py-8 px-[10%] space-y-6">
               {/* Success Header */}
               <div className="text-center pb-4 border-b border-white/5">
                 <div className="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-3">
                   <Check className="w-6 h-6 text-green-500" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Prompt Ready!</h3>
+                <h3 className="text-lg font-semibold text-white">Your prompt is ready</h3>
                 <p className="text-sm text-gray-400 mt-1">Copy and paste into Claude</p>
               </div>
 
@@ -344,7 +344,7 @@ export function FieldInputSidebar({
               </div>
 
               {/* Copy Button */}
-              <div className="pt-4 space-y-3">
+              <div className="pt-2 space-y-3">
                 <Image src="/claude.svg" alt="Claude" width={90} height={22} className="mx-auto opacity-60" />
                 <Button
                   onClick={handleCopyPrompt}

@@ -17,13 +17,13 @@ export function ColorPickerField({ field, value, onChange, error }: ColorPickerF
       <Label htmlFor={field.field_key} required={field.is_required}>
         {field.label}
       </Label>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <input
           type="color"
           id={field.field_key}
           value={value || '#000000'}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-12 rounded border border-white/10 bg-[#2a2a2a] cursor-pointer"
+          className="h-9 w-9 rounded-lg border border-white/10 bg-[#2a2a2a] cursor-pointer"
         />
         <Input
           type="text"

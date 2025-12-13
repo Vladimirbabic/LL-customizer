@@ -137,8 +137,8 @@ export function ImageUploadField({ field, value, onChange, error, uploadOnly = f
           {value ? (
             <div className="relative">
               <div
-                className="relative bg-[#2a2a2a] rounded-lg overflow-hidden"
-                style={{ width: previewSize.width, height: previewSize.height }}
+                className="relative bg-[#2a2a2a] rounded-lg overflow-hidden flex items-center justify-center"
+                style={{ width: previewSize.width, height: previewSize.height, padding: '10%' }}
               >
                 {previewError ? (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-500 text-xs">
@@ -148,9 +148,9 @@ export function ImageUploadField({ field, value, onChange, error, uploadOnly = f
                   <Image
                     src={value}
                     alt="Preview"
-                    width={previewSize.width}
-                    height={previewSize.height}
-                    className="object-cover"
+                    width={Math.round(previewSize.width * 0.8)}
+                    height={Math.round(previewSize.height * 0.8)}
+                    className="object-contain"
                     onError={() => setPreviewError(true)}
                   />
                 )}

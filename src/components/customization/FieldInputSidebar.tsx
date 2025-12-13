@@ -128,12 +128,17 @@ export function FieldInputSidebar({
       await navigator.clipboard.writeText(generatedPrompt)
       setCopied(true)
       toast.success('Prompt copied to clipboard')
-      window.open('https://claude.ai/new', '_blank')
+
+      // Delay before opening Claude
+      setTimeout(() => {
+        toast('Opening claude.ai...')
+        window.open('https://claude.ai/new', '_blank')
+      }, 1000)
 
       // Reset copied state after delay
       setTimeout(() => {
         setCopied(false)
-      }, 1500)
+      }, 2500)
     } catch (err) {
       console.error('Failed to copy:', err)
       toast.error('Failed to copy prompt')

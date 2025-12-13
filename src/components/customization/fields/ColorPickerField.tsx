@@ -23,7 +23,8 @@ export function ColorPickerField({ field, value, onChange, error }: ColorPickerF
           id={field.field_key}
           value={value || '#000000'}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-9 rounded-lg border border-white/10 bg-[#2a2a2a] cursor-pointer"
+          className="h-9 w-9 rounded-xl cursor-pointer appearance-none overflow-hidden"
+          style={{ padding: 0 }}
         />
         <Input
           type="text"

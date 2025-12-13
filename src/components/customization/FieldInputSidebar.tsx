@@ -73,9 +73,9 @@ export function FieldInputSidebar({
   const sortedFields = [...templateFields].sort((a, b) => a.display_order - b.display_order)
   const totalSteps = sortedFields.length
 
-  // Load saved values on mount
+  // Load saved values on mount and auto-generate prompt
   useEffect(() => {
-    const loadSavedValues = async () => {
+    const loadAndGenerate = async () => {
       try {
         const response = await fetch(`/api/templates/${templateId}/values`)
         if (response.ok) {
@@ -91,10 +91,14 @@ export function FieldInputSidebar({
         console.error('Error loading saved values:', err)
       } finally {
         setIsLoading(false)
+        // Auto-generate prompt after loading
+        setTimeout(() => {
+          triggerGeneration()
+        }, 100)
       }
     }
 
-    loadSavedValues()
+    loadAndGenerate()
   }, [templateId])
 
   // Auto-save values when they change (debounced)
@@ -154,17 +158,17 @@ export function FieldInputSidebar({
     }
   }
 
-  const handleGeneratePrompt = () => {
+  const triggerGeneration = useCallback(() => {
     setShowLoader(true)
     setLoaderStep(0)
 
-    // Generate prompt
+    // Generate prompt using ref for latest values
     const prompt = generateClaudePrompt({
       htmlContent,
       templateName,
       templateSize: templateSize || '8.5x11 inches',
       templateFields,
-      templateFieldValues: values,
+      templateFieldValues: valuesRef.current,
       profileFields,
       profileValues,
       systemPrompt,
@@ -182,6 +186,10 @@ export function FieldInputSidebar({
       setIsPromptGenerated(true)
       setCopied(false)
     }, 2400)
+  }, [htmlContent, templateName, templateSize, templateFields, profileFields, profileValues, systemPrompt, templatePrompt])
+
+  const handleGeneratePrompt = () => {
+    triggerGeneration()
   }
 
   const handleCopyPrompt = async () => {
@@ -209,11 +217,13 @@ export function FieldInputSidebar({
         <div className="px-6 py-4 border-b border-white/5">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-semibold text-white">Prompt Building</h2>
+              <h2 className="text-lg font-semibold text-white">Personalize</h2>
               <p className="text-sm text-gray-500 mt-0.5">
                 {isPromptGenerated
                   ? 'Your prompt is ready'
-                  : `Answer the questions to build your prompt`
+                  : showLoader
+                  ? 'Generating your prompt...'
+                  : 'Preparing your personalized prompt'
                 }
               </p>
             </div>

@@ -123,7 +123,8 @@ export function MemberstackAuthProvider({ children }: MemberstackAuthProviderPro
           if (success) {
             setIsAuthenticated(true)
             setIsLoading(false)
-            router.refresh()
+            // Delay refresh to avoid React hooks error from component tree changes
+            setTimeout(() => router.refresh(), 100)
             return
           }
         }
@@ -142,10 +143,10 @@ export function MemberstackAuthProvider({ children }: MemberstackAuthProviderPro
   // Show loading state
   if (isLoading && !isPublicPath) {
     return (
-      <div className="min-h-screen bg-[#141414] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className="mt-4 text-gray-400">Signing you in...</p>
+          <p className="mt-4 text-muted-foreground">Signing you in...</p>
         </div>
       </div>
     )

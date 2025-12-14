@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Plus, Pencil, Trash2, X, Check, ChevronDown, ChevronUp } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
@@ -163,8 +164,8 @@ export default function AdminPromptsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-white">System Prompts</h1>
-          <p className="mt-1 text-gray-400">
+          <h1 className="text-2xl font-semibold text-foreground">System Prompts</h1>
+          <p className="mt-1 text-muted-foreground">
             Create and manage system prompts for templates
           </p>
         </div>
@@ -175,14 +176,14 @@ export default function AdminPromptsPage() {
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6">
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-5 py-4 mb-6">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
       {prompts.length === 0 ? (
-        <div className="text-center py-16 bg-[#1e1e1e] rounded-2xl border border-white/5">
-          <p className="text-gray-400 mb-4">No prompts yet</p>
+        <div className="text-center py-16 bg-card rounded-2xl border border-border">
+          <p className="text-muted-foreground mb-4">No prompts yet</p>
           <Button onClick={openCreateModal}>
             Create your first prompt
           </Button>
@@ -192,35 +193,35 @@ export default function AdminPromptsPage() {
           {prompts.map((prompt) => (
             <div
               key={prompt.id}
-              className="bg-[#1e1e1e] rounded-xl border border-white/5 overflow-hidden"
+              className="bg-card rounded-xl border border-border overflow-hidden"
             >
               {/* Header */}
               <div
-                className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-white/5 transition-colors"
+                className="flex items-center justify-between px-5 py-4 cursor-pointer hover:bg-accent transition-colors"
                 onClick={() => setExpandedId(expandedId === prompt.id ? null : prompt.id)}
               >
                 <div className="flex items-center gap-3">
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-white font-medium">{prompt.name}</h3>
+                      <h3 className="text-foreground font-medium">{prompt.name}</h3>
                       <span
                         className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                           prompt.is_active
-                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                            : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                            ? 'bg-green-500/20 text-green-600 dark:text-green-400 border border-green-500/30'
+                            : 'bg-secondary text-muted-foreground border border-border'
                         }`}
                       >
                         {prompt.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </div>
                     {prompt.description && (
-                      <p className="text-sm text-gray-500 mt-0.5">{prompt.description}</p>
+                      <p className="text-sm text-muted-foreground mt-0.5">{prompt.description}</p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-500">
+                  <span className="text-xs text-muted-foreground">
                     {formatDateTime(prompt.updated_at)}
                   </span>
                   <button
@@ -228,7 +229,7 @@ export default function AdminPromptsPage() {
                       e.stopPropagation()
                       openEditModal(prompt)
                     }}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                    className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
@@ -238,7 +239,7 @@ export default function AdminPromptsPage() {
                       handleDelete(prompt.id)
                     }}
                     disabled={deletingId === prompt.id}
-                    className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                    className="p-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
                   >
                     {deletingId === prompt.id ? (
                       <Spinner size="sm" />
@@ -247,21 +248,21 @@ export default function AdminPromptsPage() {
                     )}
                   </button>
                   {expandedId === prompt.id ? (
-                    <ChevronUp className="w-4 h-4 text-gray-500" />
+                    <ChevronUp className="w-4 h-4 text-muted-foreground" />
                   ) : (
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                    <ChevronDown className="w-4 h-4 text-muted-foreground" />
                   )}
                 </div>
               </div>
 
               {/* Expanded Content */}
               {expandedId === prompt.id && (
-                <div className="px-5 pb-4 border-t border-white/5">
+                <div className="px-5 pb-4 border-t border-border">
                   <div className="mt-4">
-                    <Label className="text-xs text-gray-500 uppercase tracking-wider">
+                    <Label className="text-xs text-muted-foreground uppercase tracking-wider">
                       Prompt Content
                     </Label>
-                    <pre className="mt-2 p-4 bg-[#2a2a2a] rounded-lg text-sm text-gray-300 whitespace-pre-wrap font-mono overflow-x-auto max-h-96 overflow-y-auto dark-scrollbar">
+                    <pre className="mt-2 p-4 bg-muted rounded-lg text-sm text-foreground whitespace-pre-wrap font-mono overflow-x-auto max-h-96 overflow-y-auto">
                       {prompt.prompt_content}
                     </pre>
                   </div>
@@ -275,22 +276,22 @@ export default function AdminPromptsPage() {
       {/* Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80">
-          <div className="bg-[#1a1a1a] rounded-2xl border border-white/10 w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div className="bg-card rounded-2xl border border-border w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10">
-              <h2 className="text-lg font-semibold text-white">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <h2 className="text-lg font-semibold text-foreground">
                 {editingPrompt ? 'Edit Prompt' : 'Create New Prompt'}
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-1.5 text-gray-500 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                className="p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-lg hover:bg-accent"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-4 dark-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="name">Name</Label>
                 <Input
@@ -313,13 +314,13 @@ export default function AdminPromptsPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="prompt_content">Prompt Content</Label>
-                <textarea
+                <Textarea
                   id="prompt_content"
                   value={formData.prompt_content}
                   onChange={(e) => setFormData({ ...formData, prompt_content: e.target.value })}
                   placeholder="Enter the system prompt content..."
                   rows={12}
-                  className="w-full px-3 py-2 bg-[#2a2a2a] border border-white/10 rounded-lg text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#f5d5d5]/50 font-mono text-sm resize-none"
+                  className="font-mono text-sm resize-none"
                 />
               </div>
 
@@ -329,7 +330,7 @@ export default function AdminPromptsPage() {
                   id="is_active"
                   checked={formData.is_active}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                  className="rounded border-white/10 bg-[#2a2a2a] text-[#f5d5d5] focus:ring-[#f5d5d5]/50"
+                  className="rounded border-border bg-background text-primary focus:ring-primary/50"
                 />
                 <Label htmlFor="is_active" className="cursor-pointer">
                   Active (available for selection)
@@ -338,7 +339,7 @@ export default function AdminPromptsPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10">
+            <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border">
               <Button
                 variant="outline"
                 onClick={() => setShowModal(false)}

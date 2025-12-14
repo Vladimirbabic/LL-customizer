@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { Settings, Sparkles, Check, MessageSquare } from 'lucide-react'
 
 type AIProvider = 'anthropic' | 'openai'
@@ -10,14 +11,6 @@ type AIProvider = 'anthropic' | 'openai'
 interface SettingsData {
   provider: AIProvider
   systemPrompt: string
-}
-
-function DarkCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={`bg-[#1e1e1e] rounded-2xl border border-white/5 ${className}`}>
-      {children}
-    </div>
-  )
 }
 
 export default function AdminSettingsPage() {
@@ -87,23 +80,23 @@ export default function AdminSettingsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#f5d5d5]/10 flex items-center justify-center">
-            <Settings className="w-5 h-5 text-[#f5d5d5]" />
+          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Settings className="w-5 h-5 text-primary" />
           </div>
-          <h1 className="text-2xl font-semibold text-white">Settings</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
         </div>
       </div>
 
-      <DarkCard className="p-6">
+      <Card className="p-6">
         <div className="flex items-center gap-2 mb-6">
-          <Sparkles className="w-5 h-5 text-[#f5d5d5]" />
-          <h2 className="text-lg font-medium text-white">AI Settings</h2>
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h2 className="text-lg font-medium text-foreground">AI Settings</h2>
         </div>
 
         {/* AI Provider Section */}
         <div className="mb-8">
-          <h3 className="text-sm font-medium text-gray-300 mb-3">AI Provider</h3>
-          <p className="text-sm text-gray-400 mb-4">
+          <h3 className="text-sm font-medium text-foreground mb-3">AI Provider</h3>
+          <p className="text-sm text-muted-foreground mb-4">
             Choose which AI provider to use for template customization.
           </p>
 
@@ -113,19 +106,19 @@ export default function AdminSettingsPage() {
               onClick={() => setProvider('anthropic')}
               className={`p-4 rounded-xl border-2 text-left transition-all ${
                 provider === 'anthropic'
-                  ? 'border-[#f5d5d5] bg-[#f5d5d5]/10'
-                  : 'border-white/10 hover:border-white/20'
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-muted-foreground/30'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-medium">Anthropic Claude</span>
+                <span className="text-foreground font-medium">Anthropic Claude</span>
                 {provider === 'anthropic' && (
-                  <div className="w-5 h-5 rounded-full bg-[#f5d5d5] flex items-center justify-center">
-                    <Check className="w-3 h-3 text-[#141414]" />
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-3 h-3 text-primary-foreground" />
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Claude Sonnet 4 - Advanced reasoning and natural language understanding
               </p>
             </button>
@@ -135,19 +128,19 @@ export default function AdminSettingsPage() {
               onClick={() => setProvider('openai')}
               className={`p-4 rounded-xl border-2 text-left transition-all ${
                 provider === 'openai'
-                  ? 'border-[#f5d5d5] bg-[#f5d5d5]/10'
-                  : 'border-white/10 hover:border-white/20'
+                  ? 'border-primary bg-primary/10'
+                  : 'border-border hover:border-muted-foreground/30'
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-white font-medium">OpenAI</span>
+                <span className="text-foreground font-medium">OpenAI</span>
                 {provider === 'openai' && (
-                  <div className="w-5 h-5 rounded-full bg-[#f5d5d5] flex items-center justify-center">
-                    <Check className="w-3 h-3 text-[#141414]" />
+                  <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                    <Check className="w-3 h-3 text-primary-foreground" />
                   </div>
                 )}
               </div>
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 GPT-4o - Fast and capable for template generation
               </p>
             </button>
@@ -157,32 +150,32 @@ export default function AdminSettingsPage() {
         {/* System Prompt Section */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <MessageSquare className="w-4 h-4 text-gray-400" />
-            <h3 className="text-sm font-medium text-gray-300">System Prompt</h3>
+            <MessageSquare className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-foreground">System Prompt</h3>
           </div>
-          <p className="text-sm text-gray-400 mb-4">
+          <p className="text-sm text-muted-foreground mb-4">
             This prompt will be included with every AI request for template personalization. Use it to define brand voice, style guidelines, or specific instructions.
           </p>
           <textarea
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             placeholder="Example: Always maintain a professional tone. Use warm, welcoming language. Ensure contact information is prominently displayed..."
-            className="w-full min-h-[600px] px-4 py-3 bg-[#2a2a2a] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#f5d5d5]/50 focus:ring-1 focus:ring-[#f5d5d5]/50 transition-colors resize-y"
+            className="w-full min-h-[600px] px-4 py-3 bg-muted border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-colors resize-y"
           />
-          <p className="text-xs text-gray-500 mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             {systemPrompt.length} characters
           </p>
         </div>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-            <p className="text-sm text-red-400">{error}</p>
+          <div className="mb-4 p-3 bg-destructive/10 border border-destructive/20 rounded-lg">
+            <p className="text-sm text-destructive">{error}</p>
           </div>
         )}
 
         {saveSuccess && (
           <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-            <p className="text-sm text-green-400">Settings saved successfully!</p>
+            <p className="text-sm text-green-600 dark:text-green-400">Settings saved successfully!</p>
           </div>
         )}
 
@@ -201,24 +194,24 @@ export default function AdminSettingsPage() {
             )}
           </Button>
         </div>
-      </DarkCard>
+      </Card>
 
-      <DarkCard className="p-6 mt-6">
-        <h3 className="text-white font-medium mb-2">Environment Variables Required</h3>
-        <p className="text-sm text-gray-400 mb-4">
+      <Card className="p-6 mt-6">
+        <h3 className="text-foreground font-medium mb-2">Environment Variables Required</h3>
+        <p className="text-sm text-muted-foreground mb-4">
           Make sure you have the following environment variables set:
         </p>
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <code className="px-2 py-1 bg-[#2a2a2a] rounded text-xs text-gray-300">ANTHROPIC_API_KEY</code>
-            <span className="text-sm text-gray-500">- Required for Claude</span>
+            <code className="px-2 py-1 bg-muted rounded text-xs text-foreground">ANTHROPIC_API_KEY</code>
+            <span className="text-sm text-muted-foreground">- Required for Claude</span>
           </div>
           <div className="flex items-center gap-2">
-            <code className="px-2 py-1 bg-[#2a2a2a] rounded text-xs text-gray-300">OPENAI_API_KEY</code>
-            <span className="text-sm text-gray-500">- Required for OpenAI</span>
+            <code className="px-2 py-1 bg-muted rounded text-xs text-foreground">OPENAI_API_KEY</code>
+            <span className="text-sm text-muted-foreground">- Required for OpenAI</span>
           </div>
         </div>
-      </DarkCard>
+      </Card>
     </div>
   )
 }

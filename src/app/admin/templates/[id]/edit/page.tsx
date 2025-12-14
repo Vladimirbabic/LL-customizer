@@ -55,7 +55,7 @@ export default function EditTemplatePage({ params }: EditTemplatePageProps) {
         </Alert>
         <button
           onClick={() => router.push('/admin/templates')}
-          className="mt-4 text-[#f5d5d5] hover:text-white transition-colors"
+          className="mt-4 text-primary hover:text-foreground transition-colors"
         >
           Back to templates
         </button>
@@ -70,8 +70,8 @@ export default function EditTemplatePage({ params }: EditTemplatePageProps) {
   return (
     <div>
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-white">Edit Template</h1>
-        <p className="mt-1 text-gray-400">
+        <h1 className="text-2xl font-semibold text-foreground">Edit Template</h1>
+        <p className="mt-1 text-muted-foreground">
           Modify template settings and fields
         </p>
       </div>

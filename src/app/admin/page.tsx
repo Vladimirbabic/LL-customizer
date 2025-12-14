@@ -155,7 +155,7 @@ export default function AdminDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {/* Designs Created */}
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Designs Created</p>
@@ -171,7 +171,7 @@ export default function AdminDashboard() {
 
             {/* Total Templates */}
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Templates</p>
@@ -187,7 +187,7 @@ export default function AdminDashboard() {
 
             {/* Total Users */}
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Users</p>
@@ -203,7 +203,7 @@ export default function AdminDashboard() {
 
             {/* Estimated AI Cost */}
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-3">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Est. AI Cost</p>

@@ -425,15 +425,15 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                   disabled={isGeneratingDescription}
                 />
                 {isGeneratingDescription && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-[#2a2a2a]/80 rounded-xl">
-                    <div className="flex items-center gap-2 text-gray-400">
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/80 rounded-xl">
+                    <div className="flex items-center gap-2 text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" />
                       <span className="text-sm">Generating...</span>
                     </div>
                   </div>
                 )}
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 Leave empty and OpenAI will generate a description for you.
               </p>
             </div>
@@ -456,7 +456,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                 <option value="9x12 inches">9 x 12 inches</option>
                 <option value="custom">Custom (specify in description)</option>
               </Select>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted-foreground">
                 This size will be included in the generated prompt to ensure Claude creates content that fits this printable size.
               </p>
             </div>
@@ -467,13 +467,13 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                 id="isActive"
                 checked={isActive}
                 onChange={(e) => setIsActive(e.target.checked)}
-                className="rounded border-white/10 bg-[#2a2a2a] text-[#f5d5d5] focus:ring-[#f5d5d5]/50"
+                className="rounded border-border bg-background text-primary focus:ring-ring"
               />
               <Label htmlFor="isActive">Active (visible to users)</Label>
             </div>
 
             {/* Campaign Selection */}
-            <div className="space-y-2 pt-2 border-t border-white/5">
+            <div className="space-y-2 pt-2 border-t border-border">
               <div className="flex items-center justify-between">
                 <Label>Campaign</Label>
                 <Button
@@ -497,7 +497,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
               </div>
 
               {showNewCampaignForm && (
-                <div className="p-3 bg-[#2a2a2a] rounded-lg border border-white/5 space-y-3">
+                <div className="p-3 bg-muted rounded-lg border border-border space-y-3">
                   <div className="space-y-2">
                     <Label>Campaign Name</Label>
                     <Input
@@ -513,7 +513,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                         type="color"
                         value={newCampaignColor}
                         onChange={(e) => setNewCampaignColor(e.target.value)}
-                        className="w-10 h-10 rounded border border-white/10 bg-transparent cursor-pointer"
+                        className="w-10 h-10 rounded border border-border bg-transparent cursor-pointer"
                       />
                       <Input
                         value={newCampaignColor}
@@ -561,7 +561,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
 
               {campaignId && campaigns.find((c) => c.id === campaignId) && (
                 editingCampaignId === campaignId ? (
-                  <div className="p-3 bg-[#2a2a2a] rounded-lg border border-white/5 space-y-3">
+                  <div className="p-3 bg-muted rounded-lg border border-border space-y-3">
                     <div className="space-y-2">
                       <Label>Campaign Name</Label>
                       <Input
@@ -578,7 +578,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                           type="color"
                           value={editCampaignColor}
                           onChange={(e) => setEditCampaignColor(e.target.value)}
-                          className="w-10 h-10 rounded border border-white/10 bg-transparent cursor-pointer"
+                          className="w-10 h-10 rounded border border-border bg-transparent cursor-pointer"
                         />
                         <Input
                           value={editCampaignColor}
@@ -620,16 +620,16 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                       const campaign = campaigns.find((c) => c.id === campaignId)
                       if (campaign) handleStartEditCampaign(campaign)
                     }}
-                    className="flex items-center gap-2 text-sm group hover:bg-white/5 -mx-2 px-2 py-1 rounded-lg transition-colors"
+                    className="flex items-center gap-2 text-sm group hover:bg-accent -mx-2 px-2 py-1 rounded-lg transition-colors"
                   >
                     <span
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: campaigns.find((c) => c.id === campaignId)?.color }}
                     />
-                    <span className="text-gray-400 group-hover:text-white transition-colors">
+                    <span className="text-muted-foreground group-hover:text-foreground transition-colors">
                       {campaigns.find((c) => c.id === campaignId)?.name}
                     </span>
-                    <span className="text-gray-600 text-xs group-hover:text-gray-400 transition-colors">
+                    <span className="text-muted-foreground/70 text-xs group-hover:text-muted-foreground transition-colors">
                       (click to edit)
                     </span>
                   </button>
@@ -638,9 +638,9 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
             </div>
 
             {/* System Prompt Selection */}
-            <div className="space-y-2 pt-2 border-t border-white/5">
+            <div className="space-y-2 pt-2 border-t border-border">
               <Label>System Prompt</Label>
-              <p className="text-xs text-gray-500 -mt-1">
+              <p className="text-xs text-muted-foreground -mt-1">
                 Select a system prompt to customize how Claude generates content for this template
               </p>
               {isLoadingPrompts ? (
@@ -661,15 +661,15 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                 </Select>
               )}
               {systemPromptId && systemPrompts.find((p) => p.id === systemPromptId) && (
-                <div className="p-3 bg-[#2a2a2a] rounded-lg border border-white/5">
-                  <p className="text-xs text-gray-400 mb-2">
+                <div className="p-3 bg-muted rounded-lg border border-border">
+                  <p className="text-xs text-muted-foreground mb-2">
                     {systemPrompts.find((p) => p.id === systemPromptId)?.description || 'No description'}
                   </p>
                   <details className="group">
-                    <summary className="text-xs text-[#f5d5d5] cursor-pointer hover:text-white">
+                    <summary className="text-xs text-primary cursor-pointer hover:text-foreground">
                       View prompt content
                     </summary>
-                    <pre className="mt-2 p-2 bg-[#1e1e1e] rounded text-xs text-gray-400 whitespace-pre-wrap font-mono max-h-40 overflow-y-auto dark-scrollbar">
+                    <pre className="mt-2 p-2 bg-card rounded text-xs text-muted-foreground whitespace-pre-wrap font-mono max-h-40 overflow-y-auto">
                       {systemPrompts.find((p) => p.id === systemPromptId)?.prompt_content}
                     </pre>
                   </details>
@@ -701,16 +701,16 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
 
             {/* Auto-generated Thumbnail Preview */}
             {(thumbnailUrl || isGeneratingThumbnail) && (
-              <div className="space-y-2 pt-4 border-t border-white/5">
+              <div className="space-y-2 pt-4 border-t border-border">
                 <Label>Generated Thumbnail</Label>
                 {isGeneratingThumbnail ? (
-                  <div className="flex items-center gap-2 px-4 py-6 bg-[#2a2a2a] rounded-xl text-gray-400">
+                  <div className="flex items-center gap-2 px-4 py-6 bg-muted rounded-xl text-muted-foreground">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     <span className="text-sm">Generating thumbnail...</span>
                   </div>
                 ) : thumbnailUrl ? (
                   <div className="relative">
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-[#2a2a2a]">
+                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted">
                       <Image
                         src={thumbnailUrl}
                         alt="Thumbnail preview"
@@ -743,7 +743,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
             <Label htmlFor="templatePrompt">
               Custom Instructions for This Template
             </Label>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs text-muted-foreground">
               Add specific instructions that will be included in the generated prompt for Claude.
               This is useful for template-specific guidance like tone, style, or special formatting requirements.
             </p>

@@ -45,59 +45,59 @@ export default function AdminUsersPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold text-white">User Management</h1>
-        <p className="mt-1 text-gray-400">View and manage user accounts</p>
+        <h1 className="text-2xl font-semibold text-foreground">User Management</h1>
+        <p className="mt-1 text-muted-foreground">View and manage user accounts</p>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6">
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-5 py-4 mb-6">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
       {users.length === 0 ? (
-        <div className="text-center py-16 bg-[#1e1e1e] rounded-2xl border border-white/5">
-          <p className="text-gray-400">No users found</p>
+        <div className="text-center py-16 bg-card rounded-2xl border border-border">
+          <p className="text-muted-foreground">No users found</p>
         </div>
       ) : (
-        <div className="bg-[#1e1e1e] rounded-2xl border border-white/5 overflow-hidden">
-          <table className="min-w-full divide-y divide-white/5">
-            <thead className="bg-[#2a2a2a]">
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   User
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Role
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Joined
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border">
               {users.map((user) => (
-                <tr key={user.id} className="hover:bg-white/5 transition-colors">
+                <tr key={user.id} className="hover:bg-accent transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>
-                      <div className="text-sm font-medium text-white">
+                      <div className="text-sm font-medium text-foreground">
                         {user.first_name && user.last_name ? `${user.first_name} ${user.last_name}` : user.first_name || user.email}
                       </div>
-                      <div className="text-sm text-gray-500">{user.email}</div>
+                      <div className="text-sm text-muted-foreground">{user.email}</div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full ${
                         user.role === 'admin'
-                          ? 'bg-[#f5d5d5]/20 text-[#f5d5d5] border border-[#f5d5d5]/30'
-                          : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                          ? 'bg-primary/20 text-primary border border-primary/30'
+                          : 'bg-secondary text-muted-foreground border border-border'
                       }`}
                     >
                       {user.role}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {formatDateTime(user.created_at)}
                   </td>
                 </tr>

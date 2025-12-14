@@ -237,7 +237,7 @@ export default function ProfilePage() {
               created_at: '',
               updated_at: '',
             }}
-            value={value || '#f5d5d5'}
+            value={value || '#3b82f6'}
             onChange={(val) => handleFieldChange(field.field_key, val)}
           />
         )
@@ -295,8 +295,8 @@ export default function ProfilePage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-white">My Profile</h1>
-          <p className="mt-1 text-gray-400">
+          <h1 className="text-2xl font-semibold text-foreground">My Profile</h1>
+          <p className="mt-1 text-muted-foreground">
             {profileCompleted
               ? 'Your information will be used to personalize all your templates'
               : 'Complete your profile to auto-personalize templates'}
@@ -304,7 +304,7 @@ export default function ProfilePage() {
         </div>
         <div className="flex items-center gap-2">
           {saveSuccess && (
-            <span className="text-sm text-green-400">Saved!</span>
+            <span className="text-sm text-green-600">Saved!</span>
           )}
           <Button
             variant="outline"
@@ -316,7 +316,6 @@ export default function ProfilePage() {
           </Button>
           {!profileCompleted && (
             <Button
-              variant="primary"
               onClick={() => handleSave(true)}
               disabled={isSaving}
             >
@@ -327,8 +326,8 @@ export default function ProfilePage() {
       </div>
 
       {error && (
-        <div className="mb-6 px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl">
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="mb-6 px-4 py-3 bg-destructive/10 border border-destructive/20 rounded-xl">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
@@ -343,8 +342,8 @@ export default function ProfilePage() {
                 className={cn(
                   "w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-left transition-colors",
                   activeSection === category
-                    ? "bg-[#f5d5d5]/10 text-[#f5d5d5] border border-[#f5d5d5]/20"
-                    : "text-gray-400 hover:text-white hover:bg-white/5"
+                    ? "bg-primary/10 text-primary border border-primary/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent"
                 )}
               >
                 {CATEGORY_ICONS[category] || CATEGORY_ICONS.general}
@@ -392,7 +391,7 @@ export default function ProfilePage() {
                                     {field.label}
                                   </Label>
                                   {field.field_key === 'brokerage' && (
-                                    <p className="text-xs text-gray-500 mt-0.5">If you&apos;re a solo agent, just leave this empty</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">If you&apos;re a solo agent, just leave this empty</p>
                                   )}
                                 </div>
                               )}
@@ -401,7 +400,7 @@ export default function ProfilePage() {
                               </div>
                             </div>
                             {needsDividerAfter && index < categoryFields.length - 1 && (
-                              <div className="md:col-span-2 border-t border-white/5 my-2" />
+                              <div className="md:col-span-2 border-t border-border my-2" />
                             )}
                           </React.Fragment>
                         )
@@ -424,7 +423,6 @@ export default function ProfilePage() {
             </Button>
             {!profileCompleted && (
               <Button
-                variant="primary"
                 onClick={() => handleSave(true)}
                 disabled={isSaving}
               >

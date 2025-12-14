@@ -74,15 +74,15 @@ export function StaticPreview({ htmlContent }: StaticPreviewProps) {
   return (
     <div
       ref={containerRef}
-      className="h-full w-full bg-[#1a1a1a] relative flex items-center justify-center"
+      className="h-full w-full bg-muted relative flex items-center justify-center"
       style={{ overflow: 'hidden' }}
     >
       {/* Zoom Controls - floating with shadow */}
-      <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-[#2a2a2a] rounded-lg px-2 py-1 shadow-lg border border-white/10">
+      <div className="absolute top-4 right-4 z-10 flex items-center gap-1 bg-card rounded-lg px-2 py-1 shadow-lg border border-border">
         <Button variant="ghost" size="sm" onClick={handleZoomOut} disabled={scale <= MIN_ZOOM} className="h-8 w-8 p-0">
           <ZoomOut className="w-4 h-4" />
         </Button>
-        <span className="text-xs text-gray-400 w-12 text-center">{Math.round(scale * 100)}%</span>
+        <span className="text-xs text-muted-foreground w-12 text-center">{Math.round(scale * 100)}%</span>
         <Button variant="ghost" size="sm" onClick={handleZoomIn} disabled={scale >= MAX_ZOOM} className="h-8 w-8 p-0">
           <ZoomIn className="w-4 h-4" />
         </Button>

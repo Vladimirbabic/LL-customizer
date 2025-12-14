@@ -36,16 +36,16 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
   }
 
   return (
-    <div className="fixed inset-0 bg-[#141414] z-50 flex flex-col">
+    <div className="fixed inset-0 bg-background z-50 flex flex-col">
       {/* Header */}
-      <div className="bg-[#1e1e1e] border-b border-white/5 px-4 py-3 flex items-center justify-between shrink-0">
+      <div className="bg-card border-b border-border px-4 py-3 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={handleBack} className="text-gray-400 hover:text-white">
+          <Button variant="ghost" size="icon" onClick={handleBack} className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="font-semibold text-lg text-white">{template.name}</h1>
-            <p className="text-xs text-gray-500">Build your personalized prompt for Claude</p>
+            <h1 className="font-semibold text-lg text-foreground">{template.name}</h1>
+            <p className="text-xs text-muted-foreground">Build your personalized prompt for Claude</p>
           </div>
         </div>
       </div>
@@ -68,13 +68,13 @@ export function PromptGenerator({ template, profileFields, profileValues }: Prom
         </div>
 
         {/* Preview - Full width on mobile, 50% on desktop */}
-        <div className="w-full md:w-1/2 overflow-hidden md:border-l border-white/5 pb-[70vh] md:pb-0">
+        <div className="w-full md:w-1/2 overflow-hidden md:border-l border-border pb-[70vh] md:pb-0">
           <StaticPreview htmlContent={template.html_content} />
         </div>
       </div>
 
       {/* Mobile: Bottom sheet for fields */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-[#1e1e1e] border-t border-white/5 h-[70vh] overflow-y-auto dark-scrollbar">
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border h-[70vh] overflow-y-auto">
         <FieldInputSidebar
           templateId={template.id}
           templateName={template.name}

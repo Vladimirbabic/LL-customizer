@@ -6,8 +6,8 @@ export default function AdminLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-[#141414]">
-      <Navigation variant="dark" />
+    <div className="min-h-screen bg-background">
+      <Navigation />
       <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {children}
       </main>

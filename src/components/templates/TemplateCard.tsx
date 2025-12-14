@@ -4,6 +4,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Template } from '@/types'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Eye, Pencil } from 'lucide-react'
 
 interface TemplateCardProps {
@@ -18,8 +19,8 @@ export function TemplateCard({
   onPreview,
 }: TemplateCardProps) {
   return (
-    <div className="bg-[#1e1e1e] rounded-2xl border border-white/5 overflow-hidden hover:border-white/10 transition-all group">
-      <div className="relative aspect-video bg-[#2a2a2a]">
+    <div className="bg-card rounded-2xl border border-border overflow-hidden hover:border-border/80 hover:shadow-md transition-all group">
+      <div className="relative aspect-video bg-muted">
         {template.thumbnail_url ? (
           <Image
             src={template.thumbnail_url}
@@ -28,14 +29,14 @@ export function TemplateCard({
             className="object-cover"
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+          <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
             <span className="text-sm">No preview</span>
           </div>
         )}
         {!template.is_active && (
           <Badge
             variant="secondary"
-            className="absolute top-2 right-2 bg-yellow-500/20 text-yellow-400 border-yellow-500/30"
+            className="absolute top-2 right-2 bg-yellow-100 text-yellow-800 border-yellow-200"
           >
             Inactive
           </Badge>
@@ -43,38 +44,40 @@ export function TemplateCard({
       </div>
 
       <div className="p-4">
-        <h3 className="font-medium text-lg text-white mb-1 group-hover:text-[#f5d5d5] transition-colors">
+        <h3 className="font-medium text-lg text-foreground mb-1 group-hover:text-primary transition-colors">
           {template.name}
         </h3>
         {template.description && (
-          <p className="text-sm text-gray-400 line-clamp-2 mb-4">
+          <p className="text-sm text-muted-foreground line-clamp-2 mb-4">
             {template.description}
           </p>
         )}
 
         <div className="flex gap-2">
           {onPreview && (
-            <button
+            <Button
+              variant="outline"
+              size="sm"
               onClick={onPreview}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-400 hover:text-white bg-[#2a2a2a] hover:bg-[#333] rounded-lg transition-colors"
+              className="gap-1.5"
             >
               <Eye className="w-4 h-4" />
               Preview
-            </button>
+            </Button>
           )}
 
           {showAdminActions ? (
             <Link href={`/admin/templates/${template.id}/edit`} className="flex-1">
-              <button className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-sm text-gray-400 hover:text-white bg-[#2a2a2a] hover:bg-[#333] rounded-lg transition-colors">
+              <Button variant="outline" size="sm" className="w-full gap-1.5">
                 <Pencil className="w-4 h-4" />
                 Edit
-              </button>
+              </Button>
             </Link>
           ) : (
             <Link href={`/templates/${template.id}/customize`} className="flex-1">
-              <button className="w-full px-3 py-2 text-sm font-medium text-gray-900 bg-white hover:bg-gray-100 rounded-lg transition-colors">
+              <Button size="sm" className="w-full">
                 Use Template
-              </button>
+              </Button>
             </Link>
           )}
         </div>

@@ -11,8 +11,8 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <select
         className={cn(
-          'flex h-10 w-full rounded-xl border border-white/10 bg-[#2a2a2a] px-4 py-2 text-sm text-white transition-colors focus-visible:outline-none focus-visible:border-[#f5d5d5]/50 focus-visible:ring-1 focus-visible:ring-[#f5d5d5]/50 disabled:cursor-not-allowed disabled:opacity-50',
-          error && 'border-red-500 focus-visible:ring-red-500',
+          'flex h-10 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm text-foreground transition-colors focus-visible:outline-none focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50',
+          error && 'border-destructive focus-visible:ring-destructive',
           className
         )}
         ref={ref}

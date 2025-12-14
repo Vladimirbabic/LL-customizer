@@ -105,7 +105,7 @@ export default function CustomizePage({ params }: CustomizePageProps) {
         </Alert>
         <button
           onClick={() => router.push('/designs')}
-          className="mt-4 text-[#f5d5d5] hover:text-white transition-colors"
+          className="mt-4 text-primary hover:text-primary/80 transition-colors"
         >
           Back to designs
         </button>
@@ -117,16 +117,16 @@ export default function CustomizePage({ params }: CustomizePageProps) {
   if (needsProfile) {
     return (
       <div className="max-w-lg mx-auto text-center py-12">
-        <div className="w-16 h-16 rounded-full bg-[#f5d5d5]/20 flex items-center justify-center mx-auto mb-4">
-          <User className="w-8 h-8 text-[#f5d5d5]" />
+        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+          <User className="w-8 h-8 text-primary" />
         </div>
-        <h1 className="text-2xl font-semibold text-white mb-2">Complete Your Profile First</h1>
-        <p className="text-gray-400 mb-6">
+        <h1 className="text-2xl font-semibold text-foreground mb-2">Complete Your Profile First</h1>
+        <p className="text-muted-foreground mb-6">
           Before you can generate prompts, we need some information about you. This will be used to personalize your
           templates.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
-          <Button variant="primary" onClick={() => router.push('/profile')}>
+          <Button onClick={() => router.push('/profile')}>
             <User className="w-4 h-4 mr-2" />
             Set Up My Profile
           </Button>

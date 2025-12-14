@@ -6,6 +6,7 @@ import Image from 'next/image'
 import { Template, Campaign } from '@/types'
 import { Spinner } from '@/components/ui/spinner'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { LayoutTemplate, Search, Eye, X } from 'lucide-react'
 
 interface TemplateWithCampaign extends Template {
@@ -75,26 +76,26 @@ export default function DesignsPage() {
       {/* Header */}
       <div className="mb-6 sm:mb-8">
         <div className="flex items-center gap-2">
-          <h1 className="text-xl sm:text-2xl font-semibold text-white">Designs</h1>
-          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-white/10 text-gray-400">
+          <h1 className="text-xl sm:text-2xl font-semibold text-foreground">Designs</h1>
+          <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
             alpha
           </span>
         </div>
-        <p className="mt-1 text-sm sm:text-base text-gray-400">
+        <p className="mt-1 text-sm sm:text-base text-muted-foreground">
           Select a design to personalize and generate your prompt
         </p>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6">
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-5 py-4 mb-6">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
       {/* Search and Filters */}
       <div className="mb-6 space-y-3">
         <div className="relative max-w-xs">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -110,8 +111,8 @@ export default function DesignsPage() {
               onClick={() => setSelectedCampaign(null)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all whitespace-nowrap flex-shrink-0 ${
                 selectedCampaign === null
-                  ? 'bg-white text-gray-900'
-                  : 'bg-[#2a2a2a] text-gray-400 hover:text-white hover:bg-[#333]'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent'
               }`}
             >
               All Designs
@@ -122,8 +123,8 @@ export default function DesignsPage() {
                 onClick={() => setSelectedCampaign(campaign.id)}
                 className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all flex items-center gap-1.5 whitespace-nowrap flex-shrink-0 ${
                   selectedCampaign === campaign.id
-                    ? 'bg-white text-gray-900'
-                    : 'bg-[#2a2a2a] text-gray-400 hover:text-white hover:bg-[#333]'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary text-muted-foreground hover:text-foreground hover:bg-accent'
                 }`}
               >
                 <span className="w-2 h-2 rounded-full" style={{ backgroundColor: campaign.color }} />
@@ -136,16 +137,16 @@ export default function DesignsPage() {
 
       {/* Templates Grid */}
       {filteredTemplates.length === 0 ? (
-        <div className="text-center py-12 sm:py-16 bg-[#1e1e1e] rounded-2xl border border-white/5">
+        <div className="text-center py-12 sm:py-16 bg-card rounded-2xl border border-border">
           {templates.length === 0 ? (
             <>
-              <LayoutTemplate className="w-10 sm:w-12 h-10 sm:h-12 text-gray-600 mx-auto mb-4" />
-              <p className="text-gray-400 px-4">No designs available yet</p>
+              <LayoutTemplate className="w-10 sm:w-12 h-10 sm:h-12 text-muted-foreground mx-auto mb-4" />
+              <p className="text-muted-foreground px-4">No designs available yet</p>
             </>
           ) : (
             <>
-              <Search className="w-8 h-8 text-gray-600 mx-auto mb-2" />
-              <p className="text-gray-400">No designs match your search</p>
+              <Search className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+              <p className="text-muted-foreground">No designs match your search</p>
             </>
           )}
         </div>
@@ -154,9 +155,9 @@ export default function DesignsPage() {
           {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              className="bg-[#1e1e1e] rounded-2xl border border-white/5 overflow-hidden hover:border-white/10 transition-all group"
+              className="bg-card rounded-2xl border border-border overflow-hidden hover:border-border/80 hover:shadow-md transition-all group"
             >
-              <div className="relative aspect-video bg-[#2a2a2a]">
+              <div className="relative aspect-video bg-muted">
                 {template.thumbnail_url ? (
                   <Image
                     src={template.thumbnail_url}
@@ -165,7 +166,7 @@ export default function DesignsPage() {
                     className="object-cover transition-transform group-hover:scale-105"
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-500">
+                  <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
                     <span className="text-sm">No preview</span>
                   </div>
                 )}
@@ -195,17 +196,17 @@ export default function DesignsPage() {
               </div>
 
               <div className="p-4">
-                <h3 className="font-medium text-lg text-white mb-1 group-hover:text-[#f5d5d5] transition-colors">
+                <h3 className="font-medium text-lg text-foreground mb-1 group-hover:text-primary transition-colors">
                   {template.name}
                 </h3>
                 {template.description && (
-                  <p className="text-sm text-gray-400 line-clamp-2 mb-4">{template.description}</p>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-4">{template.description}</p>
                 )}
 
                 <Link href={`/templates/${template.id}/customize`} className="block">
-                  <button className="w-full px-3 py-2.5 text-sm font-medium text-gray-900 bg-white hover:bg-gray-100 rounded-lg transition-colors">
+                  <Button className="w-full">
                     Personalize
-                  </button>
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -215,26 +216,26 @@ export default function DesignsPage() {
 
       {/* Preview Modal */}
       {previewTemplate && (
-        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="relative bg-[#1e1e1e] rounded-2xl border border-white/10 w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="relative bg-card rounded-2xl border border-border w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
-                <h3 className="font-medium text-white">{previewTemplate.name}</h3>
+                <h3 className="font-medium text-foreground">{previewTemplate.name}</h3>
                 {previewTemplate.description && (
-                  <p className="text-sm text-gray-400 mt-0.5">{previewTemplate.description}</p>
+                  <p className="text-sm text-muted-foreground mt-0.5">{previewTemplate.description}</p>
                 )}
               </div>
               <button
                 onClick={() => setPreviewTemplate(null)}
-                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Preview Content - Rendered HTML */}
-            <div className="bg-[#1a1a1a] flex items-center justify-center p-6" style={{ maxHeight: 'calc(90vh - 140px)', overflow: 'auto' }}>
+            <div className="bg-muted flex items-center justify-center p-6" style={{ maxHeight: 'calc(90vh - 140px)', overflow: 'auto' }}>
               {previewTemplate.html_content ? (
                 <div
                   className="bg-white shadow-2xl"
@@ -260,18 +261,18 @@ export default function DesignsPage() {
                   />
                 </div>
               ) : (
-                <div className="flex items-center justify-center py-12 text-gray-500">
+                <div className="flex items-center justify-center py-12 text-muted-foreground">
                   <span>No preview available</span>
                 </div>
               )}
             </div>
 
             {/* Modal Footer */}
-            <div className="px-5 py-4 border-t border-white/5">
+            <div className="px-5 py-4 border-t border-border">
               <Link href={`/templates/${previewTemplate.id}/customize`} className="block">
-                <button className="w-full px-4 py-2.5 text-sm font-medium text-gray-900 bg-white hover:bg-gray-100 rounded-lg transition-colors">
+                <Button className="w-full">
                   Personalize This Design
-                </button>
+                </Button>
               </Link>
             </div>
           </div>

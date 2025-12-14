@@ -188,7 +188,6 @@ export default function AdminSettingsPage() {
 
         <div className="flex justify-end">
           <Button
-            variant="primary"
             onClick={handleSave}
             disabled={isSaving}
           >

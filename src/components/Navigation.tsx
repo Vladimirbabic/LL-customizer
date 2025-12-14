@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import {
@@ -12,6 +13,8 @@ import {
   X,
   ChevronDown,
   User,
+  Moon,
+  Sun,
 } from 'lucide-react'
 
 interface Profile {
@@ -20,21 +23,23 @@ interface Profile {
   first_name: string | null
   last_name: string | null
   role: 'user' | 'admin'
+  theme_preference: 'light' | 'dark' | null
 }
 
-interface NavigationProps {
-  variant?: 'light' | 'dark'
-}
-
-export function Navigation({ variant = 'light' }: NavigationProps) {
+export function Navigation() {
   const pathname = usePathname()
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
-  const isDark = variant === 'dark'
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -50,13 +55,32 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
           .single()
 
         setProfile(data)
+
+        // Apply saved theme preference from database
+        if (data?.theme_preference) {
+          setTheme(data.theme_preference)
+        }
       }
 
       setIsLoading(false)
     }
 
     fetchProfile()
-  }, [])
+  }, [setTheme])
+
+  const handleThemeToggle = async () => {
+    const newTheme = theme === 'dark' ? 'light' : 'dark'
+    setTheme(newTheme)
+
+    // Save to database
+    if (profile?.id) {
+      const supabase = createClient()
+      await supabase
+        .from('profiles')
+        .update({ theme_preference: newTheme })
+        .eq('id', profile.id)
+    }
+  }
 
   const handleSignOut = async () => {
     const supabase = createClient()
@@ -80,26 +104,16 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
 
   if (isLoading) {
     return (
-      <nav className={cn(
-        "h-14 border-b backdrop-blur-sm",
-        isDark
-          ? "border-white/10 bg-[#141414]/80"
-          : "border-gray-200/60 bg-white/80"
-      )}>
+      <nav className="h-14 border-b border-border bg-background/80 backdrop-blur-sm">
         <div className="h-full max-w-screen-xl mx-auto px-6 flex items-center justify-center">
-          <span className={cn("text-sm font-medium", isDark ? "text-gray-500" : "text-gray-400")}>Loading...</span>
+          <span className="text-sm font-medium text-muted-foreground">Loading...</span>
         </div>
       </nav>
     )
   }
 
   return (
-    <nav className={cn(
-      "h-14 border-b backdrop-blur-sm sticky top-0 z-40",
-      isDark
-        ? "border-white/10 bg-[#141414]/80"
-        : "border-gray-200/60 bg-white/80"
-    )}>
+    <nav className="h-14 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-40">
       <div className="h-full w-full px-6 flex items-center">
         {/* Logo - Left */}
         <div className="flex-1 flex items-center gap-4">
@@ -108,24 +122,21 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
             className="hover:opacity-70 transition-opacity"
           >
             <Image
-              src={isDark ? "/logo-white.svg" : "/logo.svg"}
+              src={mounted && theme === 'dark' ? '/logo-white.svg' : '/logo-dark.svg'}
               alt="Listing Leads"
               width={175}
               height={25}
               priority
             />
           </Link>
-          <div className={cn(
-            "hidden sm:flex items-center gap-2 text-sm",
-            isDark ? "text-[#f5d5d5]/50" : "text-[#c4a090]"
-          )}>
+          <div className="hidden sm:flex items-center gap-2 text-sm text-muted-foreground">
             <span>Powered by</span>
             <Image
-              src="/claude.svg"
+              src={mounted && theme === 'dark' ? '/claude.svg' : '/dark-claude.svg'}
               alt="Claude"
               width={72}
               height={18}
-              className={isDark ? "opacity-60" : "opacity-50"}
+              className="opacity-60"
             />
           </div>
         </div>
@@ -139,12 +150,8 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
               className={cn(
                 'px-4 py-2 text-sm font-medium rounded-full transition-all duration-200',
                 pathname.startsWith(item.href)
-                  ? isDark
-                    ? 'bg-white text-gray-900'
-                    : 'bg-gray-900 text-white'
-                  : isDark
-                    ? 'text-gray-400 hover:text-white hover:bg-white/10'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-accent'
               )}
             >
               {item.label}
@@ -158,22 +165,12 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
           <div className="hidden md:flex items-center relative">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className={cn(
-                "flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors",
-                isDark
-                  ? "text-white hover:bg-white/10"
-                  : "text-gray-900 hover:bg-gray-100"
-              )}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-foreground hover:bg-accent"
             >
               <span className="text-sm font-medium">
                 {profile?.first_name || profile?.email?.split('@')[0]}
               </span>
-              <span className={cn(
-                "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                isDark
-                  ? "bg-white/10 text-gray-400"
-                  : "bg-gray-200 text-gray-500"
-              )}>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
                 early adopter
               </span>
               <ChevronDown className={cn(
@@ -189,36 +186,37 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
                   className="fixed inset-0 z-10"
                   onClick={() => setUserMenuOpen(false)}
                 />
-                <div className={cn(
-                  "absolute right-0 top-full mt-2 z-20 rounded-lg shadow-xl overflow-hidden min-w-[160px] border",
-                  isDark
-                    ? "bg-[#2a2a2a] border-white/10"
-                    : "bg-white border-gray-200"
-                )}>
+                <div className="absolute right-0 top-full mt-2 z-20 rounded-lg shadow-xl overflow-hidden min-w-[160px] border border-border bg-card">
                   <Link
                     href="/account"
                     onClick={() => setUserMenuOpen(false)}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors",
-                      isDark
-                        ? "text-gray-300 hover:bg-white/10 hover:text-white"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                    )}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors text-muted-foreground hover:bg-accent hover:text-foreground"
                   >
                     <User className="w-4 h-4" />
                     Account
                   </Link>
                   <button
+                    onClick={handleThemeToggle}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors border-t border-border text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    {mounted && theme === 'dark' ? (
+                      <>
+                        <Sun className="w-4 h-4" />
+                        Light Mode
+                      </>
+                    ) : (
+                      <>
+                        <Moon className="w-4 h-4" />
+                        Dark Mode
+                      </>
+                    )}
+                  </button>
+                  <button
                     onClick={() => {
                       setUserMenuOpen(false)
                       handleSignOut()
                     }}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors border-t",
-                      isDark
-                        ? "text-gray-300 hover:bg-white/10 hover:text-white border-white/10"
-                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900 border-gray-100"
-                    )}
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors border-t border-border text-muted-foreground hover:bg-accent hover:text-foreground"
                   >
                     <LogOut className="w-4 h-4" />
                     Logout
@@ -231,12 +229,7 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
           {/* Mobile menu button */}
           <button
             type="button"
-            className={cn(
-              "md:hidden p-2 -mr-2 transition-colors",
-              isDark
-                ? "text-gray-400 hover:text-white"
-                : "text-gray-600 hover:text-gray-900"
-            )}
+            className="md:hidden p-2 -mr-2 transition-colors text-muted-foreground hover:text-foreground"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           >
             {mobileMenuOpen ? (
@@ -250,12 +243,7 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
 
       {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className={cn(
-          "md:hidden absolute top-14 left-0 right-0 border-b shadow-lg",
-          isDark
-            ? "bg-[#1a1a1a] border-white/10"
-            : "bg-white border-gray-200/60"
-        )}>
+        <div className="md:hidden absolute top-14 left-0 right-0 border-b border-border shadow-lg bg-card">
           <div className="py-3 px-6 space-y-1">
             {allNavItems.map((item) => (
               <Link
@@ -264,12 +252,8 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
                 className={cn(
                   'block px-4 py-2.5 text-sm font-medium rounded-lg transition-colors',
                   pathname.startsWith(item.href)
-                    ? isDark
-                      ? 'bg-white text-gray-900'
-                      : 'bg-gray-900 text-white'
-                    : isDark
-                      ? 'text-gray-400 hover:text-white hover:bg-white/10'
-                      : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                 )}
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -278,43 +262,41 @@ export function Navigation({ variant = 'light' }: NavigationProps) {
             ))}
           </div>
 
-          <div className={cn(
-            "py-3 px-6 border-t",
-            isDark ? "border-white/10" : "border-gray-100"
-          )}>
-            <div className={cn("flex items-center gap-2 text-sm font-medium mb-3", isDark ? "text-white" : "text-gray-900")}>
+          <div className="py-3 px-6 border-t border-border">
+            <div className="flex items-center gap-2 text-sm font-medium mb-3 text-foreground">
               <span>{profile?.first_name || profile?.email?.split('@')[0]}</span>
-              <span className={cn(
-                "text-[10px] font-medium px-1.5 py-0.5 rounded",
-                isDark
-                  ? "bg-white/10 text-gray-400"
-                  : "bg-gray-200 text-gray-500"
-              )}>
+              <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">
                 early adopter
               </span>
             </div>
             <div className="space-y-1">
               <Link
                 href="/account"
-                className={cn(
-                  "flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors",
-                  isDark
-                    ? "text-gray-400 hover:text-white hover:bg-white/10"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
-                )}
+                className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
                 onClick={() => setMobileMenuOpen(false)}
               >
                 <User className="w-4 h-4" />
                 Account
               </Link>
               <button
-                onClick={handleSignOut}
-                className={cn(
-                  "w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors",
-                  isDark
-                    ? "text-gray-400 hover:text-white hover:bg-white/10"
-                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-100"
+                onClick={handleThemeToggle}
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
+              >
+                {mounted && theme === 'dark' ? (
+                  <>
+                    <Sun className="w-4 h-4" />
+                    Light Mode
+                  </>
+                ) : (
+                  <>
+                    <Moon className="w-4 h-4" />
+                    Dark Mode
+                  </>
                 )}
+              </button>
+              <button
+                onClick={handleSignOut}
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm font-medium rounded-lg transition-colors text-muted-foreground hover:text-foreground hover:bg-accent"
               >
                 <LogOut className="w-4 h-4" />
                 Sign out

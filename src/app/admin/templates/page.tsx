@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Template } from '@/types'
 import { Spinner } from '@/components/ui/spinner'
+import { Button } from '@/components/ui/button'
 import { Plus, Pencil, Trash2, Eye } from 'lucide-react'
 import { formatDateTime } from '@/lib/utils'
 
@@ -71,58 +72,54 @@ export default function AdminTemplatesPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-semibold text-white">Manage Templates</h1>
-          <p className="mt-1 text-gray-400">
+          <h1 className="text-2xl font-semibold text-foreground">Manage Templates</h1>
+          <p className="mt-1 text-muted-foreground">
             Create, edit, and manage your page templates
           </p>
         </div>
-        <Link
-          href="/admin/templates/new"
-          className="flex items-center gap-2 px-4 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          New Template
+        <Link href="/admin/templates/new">
+          <Button>
+            <Plus className="w-4 h-4" />
+            New Template
+          </Button>
         </Link>
       </div>
 
       {error && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl px-5 py-4 mb-6">
-          <p className="text-sm text-red-400">{error}</p>
+        <div className="bg-destructive/10 border border-destructive/20 rounded-xl px-5 py-4 mb-6">
+          <p className="text-sm text-destructive">{error}</p>
         </div>
       )}
 
       {templates.length === 0 ? (
-        <div className="text-center py-16 bg-[#1e1e1e] rounded-2xl border border-white/5">
-          <p className="text-gray-400 mb-4">No templates yet</p>
-          <Link
-            href="/admin/templates/new"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-white text-gray-900 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
-          >
-            Create your first template
+        <div className="text-center py-16 bg-card rounded-2xl border border-border">
+          <p className="text-muted-foreground mb-4">No templates yet</p>
+          <Link href="/admin/templates/new">
+            <Button>Create your first template</Button>
           </Link>
         </div>
       ) : (
-        <div className="bg-[#1e1e1e] rounded-2xl border border-white/5 overflow-hidden">
-          <table className="min-w-full divide-y divide-white/5">
-            <thead className="bg-[#2a2a2a]">
+        <div className="bg-card rounded-2xl border border-border overflow-hidden">
+          <table className="min-w-full divide-y divide-border">
+            <thead className="bg-muted">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Template
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
-                <th className="px-6 py-4 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Last Updated
                 </th>
-                <th className="px-6 py-4 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <th className="px-6 py-4 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody className="divide-y divide-border">
               {templates.map((template) => (
-                <tr key={template.id} className="hover:bg-white/5 transition-colors">
+                <tr key={template.id} className="hover:bg-accent/50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {template.thumbnail_url && (
@@ -135,11 +132,11 @@ export default function AdminTemplatesPage() {
                         </div>
                       )}
                       <div>
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium text-foreground">
                           {template.name}
                         </div>
                         {template.description && (
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
+                          <div className="text-sm text-muted-foreground truncate max-w-xs">
                             {template.description}
                           </div>
                         )}
@@ -150,32 +147,32 @@ export default function AdminTemplatesPage() {
                     <span
                       className={`px-2 py-1 text-xs font-medium rounded-full ${
                         template.is_active
-                          ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                          : 'bg-gray-500/20 text-gray-400 border border-gray-500/30'
+                          ? 'bg-green-100 text-green-800 border border-green-200'
+                          : 'bg-gray-100 text-gray-600 border border-gray-200'
                       }`}
                     >
                       {template.is_active ? 'Active' : 'Inactive'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-400">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     {formatDateTime(template.updated_at)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center justify-end gap-1">
                       <Link href={`/templates/${template.id}/customize`}>
-                        <button className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
                           <Eye className="w-4 h-4" />
                         </button>
                       </Link>
                       <Link href={`/admin/templates/${template.id}/edit`}>
-                        <button className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                        <button className="p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-lg transition-colors">
                           <Pencil className="w-4 h-4" />
                         </button>
                       </Link>
                       <button
                         onClick={() => handleDelete(template.id)}
                         disabled={deletingId === template.id}
-                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50"
+                        className="p-2 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-lg transition-colors disabled:opacity-50"
                       >
                         {deletingId === template.id ? (
                           <Spinner size="sm" />

@@ -543,7 +543,7 @@ export function CustomizationForm({
               Your file has been downloaded successfully.
             </p>
             <Button
-              variant="primary"
+              variant="default"
               onClick={() => setShowPdfSuccess(false)}
               className="w-full"
             >
@@ -625,7 +625,7 @@ export function CustomizationForm({
             </Button>
           )}
           <Button
-            variant="primary"
+            variant="default"
             onClick={handleDownloadPdf}
             disabled={isGeneratingPdf}
             className="px-2 sm:px-3"

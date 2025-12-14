@@ -199,8 +199,8 @@ export default function AccountPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-white">Account Settings</h1>
-        <p className="mt-1 text-gray-400">Manage your account information and security</p>
+        <h1 className="text-2xl font-semibold text-foreground">Account Settings</h1>
+        <p className="mt-1 text-muted-foreground">Manage your account information and security</p>
       </div>
 
       <div className="space-y-6">
@@ -237,7 +237,7 @@ export default function AccountPage() {
                 </div>
               </div>
               {nameMessage && (
-                <p className={`text-sm ${nameMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-sm ${nameMessage.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
                   {nameMessage.text}
                 </p>
               )}
@@ -274,7 +274,7 @@ export default function AccountPage() {
                 />
               </div>
               {emailMessage && (
-                <p className={`text-sm ${emailMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-sm ${emailMessage.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
                   {emailMessage.text}
                 </p>
               )}
@@ -300,11 +300,11 @@ export default function AccountPage() {
           <CardContent>
             <div className="space-y-4">
               {isMemberstackUser && (
-                <div className="flex items-start gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                  <Shield className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
-                  <div className="text-sm text-gray-300">
-                    <p className="font-medium text-blue-400 mb-1">Optional: Set a direct login password</p>
-                    <p className="text-gray-400">
+                <div className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <Shield className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm">
+                    <p className="font-medium text-blue-800 mb-1">Optional: Set a direct login password</p>
+                    <p className="text-blue-700">
                       You're signed in via Memberstack. You can optionally set a password to log in directly to this app without going through the main site.
                     </p>
                   </div>
@@ -333,7 +333,7 @@ export default function AccountPage() {
                 />
               </div>
               {passwordMessage && (
-                <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                <p className={`text-sm ${passwordMessage.type === 'success' ? 'text-green-600' : 'text-destructive'}`}>
                   {passwordMessage.text}
                 </p>
               )}
@@ -349,16 +349,16 @@ export default function AccountPage() {
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-red-500/20">
+        <Card className="border-red-200">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-400">
+            <CardTitle className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="w-5 h-5" />
               Danger Zone
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <p className="text-sm text-gray-400">
+              <p className="text-sm text-muted-foreground">
                 Once you delete your account, there is no going back. All your designs and data will be permanently removed.
               </p>
 
@@ -366,18 +366,18 @@ export default function AccountPage() {
                 <Button
                   onClick={() => setShowDeleteConfirm(true)}
                   variant="outline"
-                  className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                  className="border-red-300 text-red-600 hover:bg-red-50 hover:text-red-700"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
                   Delete Account
                 </Button>
               ) : (
-                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-xl space-y-4">
-                  <p className="text-sm text-red-400 font-medium">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl space-y-4">
+                  <p className="text-sm text-red-700 font-medium">
                     Are you absolutely sure? This action cannot be undone.
                   </p>
                   <div>
-                    <Label htmlFor="deleteConfirm" className="text-red-400">
+                    <Label htmlFor="deleteConfirm" className="text-red-700">
                       Type DELETE to confirm
                     </Label>
                     <Input
@@ -385,11 +385,11 @@ export default function AccountPage() {
                       value={deleteConfirmText}
                       onChange={(e) => setDeleteConfirmText(e.target.value)}
                       placeholder="DELETE"
-                      className="mt-1 border-red-500/30 focus:border-red-500"
+                      className="mt-1 border-red-300 focus:border-red-500"
                     />
                   </div>
                   {deleteMessage && (
-                    <p className={`text-sm ${deleteMessage.type === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                    <p className={`text-sm ${deleteMessage.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
                       {deleteMessage.text}
                     </p>
                   )}
@@ -407,7 +407,7 @@ export default function AccountPage() {
                     <Button
                       onClick={handleDeleteAccount}
                       disabled={isDeleting || deleteConfirmText !== 'DELETE'}
-                      className="bg-red-500 hover:bg-red-600 text-white border-0"
+                      className="bg-red-600 hover:bg-red-700 text-white border-0"
                     >
                       {isDeleting ? <Spinner size="sm" /> : 'Delete My Account'}
                     </Button>

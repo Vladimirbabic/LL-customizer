@@ -76,7 +76,7 @@ export function TemplateGallery({
   if (templates.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-400">No templates available</p>
+        <p className="text-muted-foreground">No templates available</p>
       </div>
     )
   }

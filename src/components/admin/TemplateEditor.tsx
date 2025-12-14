@@ -373,7 +373,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Templates
         </Button>
-        <Button variant="primary" onClick={handleSave} disabled={isSaving}>
+        <Button variant="default" onClick={handleSave} disabled={isSaving}>
           {isSaving ? (
             <>
               <Spinner size="sm" className="mr-2" />
@@ -523,7 +523,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                     </div>
                   </div>
                   <Button
-                    variant="primary"
+                    variant="default"
                     size="sm"
                     onClick={handleCreateCampaign}
                     disabled={!newCampaignName.trim() || isCreatingCampaign}
@@ -589,7 +589,7 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
                     </div>
                     <div className="flex gap-2">
                       <Button
-                        variant="primary"
+                        variant="default"
                         size="sm"
                         onClick={handleSaveCampaign}
                         disabled={!editCampaignName.trim() || isSavingCampaign}

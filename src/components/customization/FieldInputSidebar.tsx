@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react'
 import Image from 'next/image'
+import { useTheme } from 'next-themes'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Copy, Check, Loader2, FileDown, FileCode } from 'lucide-react'
@@ -51,12 +52,20 @@ export function FieldInputSidebar({
   const [generatedPrompt, setGeneratedPrompt] = useState('')
   const [copied, setCopied] = useState(false)
   const [isPromptGenerated, setIsPromptGenerated] = useState(false)
+  const [mounted, setMounted] = useState(false)
+  const { theme } = useTheme()
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // PDF conversion state
   const [uploadedHtml, setUploadedHtml] = useState('')
   const [uploadedFileName, setUploadedFileName] = useState('')
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [pdfError, setPdfError] = useState('')
+  const [isDragActive, setIsDragActive] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const loaderSteps = [
@@ -148,7 +157,10 @@ export function FieldInputSidebar({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
+    processFile(file)
+  }
 
+  const processFile = (file: File) => {
     setPdfError('')
     setUploadedFileName(file.name)
 
@@ -161,6 +173,31 @@ export function FieldInputSidebar({
       setPdfError('Failed to read file')
     }
     reader.readAsText(file)
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragActive(false)
+
+    const file = e.dataTransfer.files?.[0]
+    if (file && (file.name.endsWith('.html') || file.name.endsWith('.htm'))) {
+      processFile(file)
+    } else {
+      setPdfError('Please drop an HTML file')
+    }
   }
 
   const handleGeneratePdf = async () => {
@@ -206,9 +243,9 @@ export function FieldInputSidebar({
   }
 
   return (
-    <div className="h-full flex flex-col bg-[#1e1e1e] border-r border-white/5 relative">
+    <div className="h-full flex flex-col bg-card border-r border-border relative">
       {/* Content */}
-      <div className="flex-1 overflow-y-auto dark-scrollbar">
+      <div className="flex-1 overflow-y-auto">
         {showLoader ? (
           // Loader View - Stacked checkmarks with progress bar
           <div className="flex flex-col items-center justify-center h-full p-6">
@@ -238,21 +275,21 @@ export function FieldInputSidebar({
                         index < loaderStep
                           ? 'bg-green-500'
                           : index === loaderStep
-                          ? 'bg-[#D97757]'
-                          : 'bg-white/10'
+                          ? 'bg-primary'
+                          : 'bg-muted'
                       }`}
                     >
                       {index < loaderStep ? (
                         <Check className="w-4 h-4 text-white" />
                       ) : index === loaderStep ? (
-                        <Loader2 className="w-4 h-4 text-white animate-spin" />
+                        <Loader2 className="w-4 h-4 text-primary-foreground animate-spin" />
                       ) : (
-                        <div className="w-2 h-2 rounded-full bg-white/30" />
+                        <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />
                       )}
                     </div>
                     <span
                       className={`text-sm transition-colors duration-300 ${
-                        index <= loaderStep ? 'text-white' : 'text-gray-500'
+                        index <= loaderStep ? 'text-foreground' : 'text-muted-foreground'
                       }`}
                     >
                       {step}
@@ -263,9 +300,9 @@ export function FieldInputSidebar({
 
               {/* Progress bar */}
               <div className="pt-4">
-                <div className="h-1.5 bg-white/10 rounded-full overflow-hidden">
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-[#D97757] transition-all duration-500 ease-out rounded-full"
+                    className="h-full bg-primary transition-all duration-500 ease-out rounded-full"
                     style={{ width: `${((loaderStep + 1) / loaderSteps.length) * 100}%` }}
                   />
                 </div>
@@ -279,41 +316,41 @@ export function FieldInputSidebar({
             <div className="pb-4">
               {/* Mobile: horizontal layout */}
               <div className="flex md:hidden items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-green-500/15 flex items-center justify-center shrink-0">
-                  <Check className="w-5 h-5 text-green-500" />
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+                  <Check className="w-5 h-5 text-green-600" />
                 </div>
                 <div className="text-left">
-                  <h3 className="text-base font-semibold text-white">Your prompt is ready</h3>
-                  <p className="text-sm text-gray-400">See two steps below</p>
+                  <h3 className="text-base font-semibold text-foreground">Your prompt is ready</h3>
+                  <p className="text-sm text-muted-foreground">See two steps below</p>
                 </div>
               </div>
               {/* Desktop: centered layout */}
               <div className="hidden md:block text-center">
-                <div className="w-12 h-12 rounded-full bg-green-500/15 flex items-center justify-center mx-auto mb-3">
-                  <Check className="w-6 h-6 text-green-500" />
+                <div className="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-3">
+                  <Check className="w-6 h-6 text-green-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-white">Your prompt is ready</h3>
-                <p className="text-sm text-gray-400 mt-1">See two steps below</p>
+                <h3 className="text-lg font-semibold text-foreground">Your prompt is ready</h3>
+                <p className="text-sm text-muted-foreground mt-1">See two steps below</p>
               </div>
             </div>
 
             {/* Divider */}
-            <div className="border-t border-white/5" />
+            <div className="border-t border-border" />
 
             {/* Step 1 */}
             <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded bg-white/10 text-gray-400 text-xs font-medium">Step 1</span>
-              <h4 className="text-base font-medium text-white">Copy prompt and edit in Claude</h4>
+              <span className="px-2 py-0.5 rounded bg-secondary text-muted-foreground text-xs font-medium">Step 1</span>
+              <h4 className="text-base font-medium text-foreground">Copy prompt and edit in Claude</h4>
             </div>
 
             {/* Prompt Preview */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">Generated Prompt</span>
-                <span className="text-xs text-gray-500">{generatedPrompt.length.toLocaleString()} chars</span>
+                <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Generated Prompt</span>
+                <span className="text-xs text-muted-foreground">{generatedPrompt.length.toLocaleString()} chars</span>
               </div>
-              <div className="bg-[#141414] border border-white/10 rounded-xl p-4 max-h-64 overflow-y-auto dark-scrollbar">
-                <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono leading-relaxed">
+              <div className="bg-muted border border-border rounded-xl p-4 max-h-64 overflow-y-auto">
+                <pre className="text-xs text-foreground whitespace-pre-wrap font-mono leading-relaxed">
                   {generatedPrompt}
                 </pre>
               </div>
@@ -323,7 +360,8 @@ export function FieldInputSidebar({
             <div className="pt-2">
               <Button
                 onClick={handleCopyPrompt}
-                className="w-full h-14 text-base bg-[#2a2a2a] text-white hover:bg-[#3a3a3a] border border-white/10 rounded-xl flex items-center justify-center gap-3"
+                className="w-full h-14 text-base"
+                variant="outline"
               >
                 {copied ? (
                   <>
@@ -334,7 +372,7 @@ export function FieldInputSidebar({
                   <>
                     <Copy className="w-4 h-4" />
                     <span>Copy & Open</span>
-                    <Image src="/claude.svg" alt="Claude" width={70} height={18} className="opacity-90" />
+                    <Image src={mounted && theme === 'dark' ? '/claude.svg' : '/dark-claude.svg'} alt="Claude" width={70} height={18} className="opacity-70" />
                   </>
                 )}
               </Button>
@@ -342,13 +380,13 @@ export function FieldInputSidebar({
 
             {/* Divider */}
             <div className="py-4">
-              <div className="border-t border-white/5" />
+              <div className="border-t border-border" />
             </div>
 
             {/* Step 2 */}
             <div className="flex items-center gap-3">
-              <span className="px-2 py-0.5 rounded bg-white/10 text-gray-400 text-xs font-medium">Step 2</span>
-              <h4 className="text-base font-medium text-white">Convert Claude HTML to Print-Ready PDF</h4>
+              <span className="px-2 py-0.5 rounded bg-secondary text-muted-foreground text-xs font-medium">Step 2</span>
+              <h4 className="text-base font-medium text-foreground">Convert Claude HTML to Print-Ready PDF</h4>
             </div>
 
             {/* PDF Upload Area */}
@@ -362,32 +400,41 @@ export function FieldInputSidebar({
               />
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full h-24 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center gap-2 hover:border-[#D97757]/50 hover:bg-white/5 transition-all cursor-pointer"
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                className={`w-full h-24 border-2 border-dashed rounded-xl flex flex-col items-center justify-center gap-2 transition-all cursor-pointer ${
+                  isDragActive
+                    ? 'border-primary bg-primary/10'
+                    : 'border-border hover:border-primary/50 hover:bg-accent'
+                }`}
               >
                 {uploadedFileName ? (
                   <>
-                    <FileCode className="w-6 h-6 text-[#D97757]" />
-                    <span className="text-sm text-white font-medium">{uploadedFileName}</span>
-                    <span className="text-xs text-gray-500">Click to change file</span>
+                    <FileCode className="w-6 h-6 text-primary" />
+                    <span className="text-sm text-foreground font-medium">{uploadedFileName}</span>
+                    <span className="text-xs text-muted-foreground">Click or drag to change file</span>
                   </>
                 ) : (
                   <>
-                    <FileCode className="w-6 h-6 text-gray-500" />
-                    <span className="text-sm text-gray-400">Upload HTML file from Claude</span>
+                    <FileCode className={`w-6 h-6 ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`} />
+                    <span className={`text-sm ${isDragActive ? 'text-primary' : 'text-muted-foreground'}`}>
+                      {isDragActive ? 'Drop HTML file here' : 'Drag & drop or click to upload HTML'}
+                    </span>
                   </>
                 )}
               </button>
 
               {/* Error message */}
               {pdfError && (
-                <p className="text-xs text-red-400">{pdfError}</p>
+                <p className="text-xs text-destructive">{pdfError}</p>
               )}
 
               {/* Generate Button */}
               <Button
                 onClick={handleGeneratePdf}
                 disabled={isGeneratingPdf || !uploadedHtml.trim()}
-                className="w-full h-12 bg-[#D97757] text-white hover:bg-[#C96747] disabled:opacity-50 disabled:cursor-not-allowed rounded-xl"
+                className="w-full h-12"
               >
                 {isGeneratingPdf ? (
                   <>

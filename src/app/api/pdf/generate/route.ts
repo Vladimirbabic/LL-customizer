@@ -24,10 +24,13 @@ async function getBrowser() {
   } else {
     // Use bundled chromium for production (dynamic import for Turbopack compatibility)
     const chromium = await import('@sparticuz/chromium').then(m => m.default)
+
     return puppeteer.launch({
       args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: true,
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     })
   }
 }

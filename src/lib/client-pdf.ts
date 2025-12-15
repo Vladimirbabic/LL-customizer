@@ -6,35 +6,86 @@ import jsPDF from 'jspdf'
  * html2canvas doesn't support lab(), lch(), oklch(), oklab() colors
  */
 function convertModernColors(html: string): string {
-  // Replace lab() colors with fallback values
-  // Common lab colors used in designs - map to hex equivalents
   let converted = html
 
-  // Replace lab() with a neutral fallback or try to parse
-  // lab(L a b) where L is lightness 0-100, a and b are -125 to 125
+  // Replace lab() with RGB approximation based on lightness
   converted = converted.replace(/lab\([^)]+\)/gi, (match) => {
-    // Extract values
     const values = match.match(/lab\(\s*([\d.]+)%?\s+([\d.-]+)\s+([\d.-]+)/i)
     if (values) {
       const l = parseFloat(values[1])
-      // Simple approximation: use lightness to create grayscale fallback
-      // This isn't perfect but works for most cases
       const gray = Math.round((l / 100) * 255)
       return `rgb(${gray}, ${gray}, ${gray})`
     }
-    return '#808080' // Fallback gray
+    return '#808080'
   })
 
-  // Replace oklch() colors
+  // Replace other modern color functions
   converted = converted.replace(/oklch\([^)]+\)/gi, '#808080')
-
-  // Replace oklab() colors
   converted = converted.replace(/oklab\([^)]+\)/gi, '#808080')
-
-  // Replace lch() colors
   converted = converted.replace(/lch\([^)]+\)/gi, '#808080')
 
   return converted
+}
+
+/**
+ * Generates a PDF by capturing the live preview element as an image.
+ * This preserves exact styling since it captures what's actually rendered.
+ */
+export async function generatePdfFromPreview(
+  previewElement: HTMLElement | null,
+  filename: string
+): Promise<Blob> {
+  if (!previewElement) {
+    throw new Error('Preview element not found')
+  }
+
+  console.log('[PDF] Capturing preview element as image...')
+
+  // Capture the preview element directly - this preserves all styling
+  const canvas = await html2canvas(previewElement, {
+    scale: 2, // High resolution for print quality
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    logging: false,
+  })
+
+  console.log(`[PDF] Canvas created: ${canvas.width}x${canvas.height}`)
+
+  // Create PDF with letter size
+  const pdf = new jsPDF({
+    orientation: 'portrait',
+    unit: 'in',
+    format: 'letter',
+  })
+
+  // Fit to letter size (8.5 x 11 inches)
+  const pageWidth = 8.5
+  const pageHeight = 11
+  const imgAspect = canvas.width / canvas.height
+  const pageAspect = pageWidth / pageHeight
+
+  let imgWidth, imgHeight, offsetX, offsetY
+
+  if (imgAspect > pageAspect) {
+    // Image is wider than page - fit to width
+    imgWidth = pageWidth
+    imgHeight = pageWidth / imgAspect
+    offsetX = 0
+    offsetY = (pageHeight - imgHeight) / 2
+  } else {
+    // Image is taller than page - fit to height
+    imgHeight = pageHeight
+    imgWidth = pageHeight * imgAspect
+    offsetX = (pageWidth - imgWidth) / 2
+    offsetY = 0
+  }
+
+  const imgData = canvas.toDataURL('image/jpeg', 0.95)
+  pdf.addImage(imgData, 'JPEG', offsetX, offsetY, imgWidth, imgHeight)
+
+  console.log('[PDF] PDF generated successfully')
+  return pdf.output('blob')
 }
 
 /**
@@ -49,9 +100,8 @@ export async function generatePdfClientSide(
 
   // Convert modern CSS colors that html2canvas doesn't support
   const processedHtml = convertModernColors(html)
-  console.log('[PDF] Converted modern color functions')
 
-  // Create a visible iframe for proper rendering (hidden containers have issues)
+  // Create iframe for rendering
   const iframe = document.createElement('iframe')
   iframe.style.position = 'fixed'
   iframe.style.left = '-10000px'
@@ -59,25 +109,41 @@ export async function generatePdfClientSide(
   iframe.style.width = '816px'
   iframe.style.height = '1056px'
   iframe.style.border = 'none'
+  iframe.style.background = 'white'
   document.body.appendChild(iframe)
 
   try {
-    // Write HTML to iframe
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document
     if (!iframeDoc) {
       throw new Error('Could not access iframe document')
     }
 
+    // Write complete HTML document
     iframeDoc.open()
-    iframeDoc.write(processedHtml)
+    iframeDoc.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              width: 816px;
+              min-height: 1056px;
+              background: white;
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+          </style>
+        </head>
+        <body>${processedHtml}</body>
+      </html>
+    `)
     iframeDoc.close()
 
-    // Wait for iframe to load
-    await new Promise(resolve => setTimeout(resolve, 500))
+    // Wait for content to load
+    await new Promise(resolve => setTimeout(resolve, 800))
 
-    // Wait for images to load in iframe
+    // Wait for images
     const images = iframeDoc.querySelectorAll('img')
-    console.log(`[PDF] Waiting for ${images.length} images to load...`)
     await Promise.all(
       Array.from(images).map((img) => {
         if (img.complete) return Promise.resolve()
@@ -93,58 +159,34 @@ export async function generatePdfClientSide(
       await iframeDoc.fonts.ready
     }
 
-    // Extra delay for rendering
     await new Promise(resolve => setTimeout(resolve, 300))
 
     console.log('[PDF] Capturing canvas...')
 
-    // Capture iframe body as canvas
+    // Capture as high-quality image
     const canvas = await html2canvas(iframeDoc.body, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: true,
+      logging: false,
       width: 816,
-      height: 1056,
       windowWidth: 816,
-      windowHeight: 1056,
     })
 
-    console.log(`[PDF] Canvas created: ${canvas.width}x${canvas.height}`)
+    console.log(`[PDF] Canvas: ${canvas.width}x${canvas.height}`)
 
-    // Create PDF with letter size
+    // Create PDF
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'in',
-      format: 'letter',
+      unit: 'px',
+      format: [816, 1056],
+      hotfixes: ['px_scaling'],
     })
 
-    // Calculate dimensions to fit letter size (8.5 x 11 inches)
-    const imgWidth = 8.5
-    const imgHeight = (canvas.height * imgWidth) / canvas.width
-
-    // Add image to PDF
-    const imgData = canvas.toDataURL('image/jpeg', 0.95)
-
-    // If content is taller than one page, we need to handle pagination
-    const pageHeight = 11
-    let yPosition = 0
-    let remainingHeight = imgHeight
-
-    while (remainingHeight > 0) {
-      if (yPosition === 0) {
-        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight)
-      }
-
-      remainingHeight -= pageHeight
-
-      if (remainingHeight > 0) {
-        pdf.addPage()
-        yPosition -= pageHeight
-        pdf.addImage(imgData, 'JPEG', 0, yPosition, imgWidth, imgHeight)
-      }
-    }
+    // Add as full-page image
+    const imgData = canvas.toDataURL('image/png')
+    pdf.addImage(imgData, 'PNG', 0, 0, 816, 1056)
 
     console.log('[PDF] PDF generated successfully')
     return pdf.output('blob')

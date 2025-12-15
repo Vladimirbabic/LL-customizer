@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { Textarea } from '@/components/ui/textarea'
 import { createClient } from '@/lib/supabase/client'
-import { downloadPdfClientSide } from '@/lib/client-pdf'
+import { downloadPdfClientSide, generatePdfFromPreview } from '@/lib/client-pdf'
 import { toast } from 'sonner'
 import { Save, Download, ArrowLeft, X, FileText, MessageSquare, History, User, Bot, ImagePlus, ChevronDown, Pencil, Check, Undo2, CheckCircle2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
@@ -489,8 +489,28 @@ export function CustomizationForm({
       toast.info('Generating PDF in browser...')
 
       try {
-        // Fallback to client-side PDF generation
-        await downloadPdfClientSide(renderedHtml, filename)
+        // Try to capture the live preview first (preserves exact styling)
+        const previewBody = previewRef.current?.getIframeBody()
+
+        if (previewBody) {
+          console.log('[PDF] Capturing from live preview...')
+          const blob = await generatePdfFromPreview(previewBody, filename)
+
+          // Download the blob
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `${filename}.pdf`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+        } else {
+          // Fallback to HTML rendering
+          console.log('[PDF] Falling back to HTML rendering...')
+          await downloadPdfClientSide(renderedHtml, filename)
+        }
+
         setShowPdfSuccess(true)
         toast.success('PDF downloaded successfully')
       } catch (clientError) {

@@ -18,6 +18,7 @@ interface LivePreviewProps {
 
 export interface LivePreviewHandle {
   getIframeDocument: () => Document | null
+  getIframeBody: () => HTMLElement | null
   getRenderedHtml: () => string
   takeScreenshot: () => Promise<void>
 }
@@ -107,6 +108,12 @@ export const LivePreview = forwardRef<LivePreviewHandle, LivePreviewProps>(
       getIframeDocument: () => {
         if (iframeRef.current) {
           return iframeRef.current.contentDocument
+        }
+        return null
+      },
+      getIframeBody: () => {
+        if (iframeRef.current?.contentDocument?.body) {
+          return iframeRef.current.contentDocument.body
         }
         return null
       },

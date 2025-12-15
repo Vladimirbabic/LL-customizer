@@ -18,6 +18,7 @@ import {
   FolderPlus,
   X,
   Loader2,
+  Upload,
 } from 'lucide-react'
 import { TemplateFieldsEditor, TemplateFieldData } from './TemplateFieldsEditor'
 
@@ -83,7 +84,10 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
 
   // Thumbnail state
   const [isGeneratingThumbnail, setIsGeneratingThumbnail] = useState(false)
+  const [isUploadingThumbnail, setIsUploadingThumbnail] = useState(false)
+  const [useCustomThumbnail, setUseCustomThumbnail] = useState(!!template?.thumbnail_url)
   const thumbnailGenerationRef = useRef<NodeJS.Timeout | null>(null)
+  const thumbnailInputRef = useRef<HTMLInputElement | null>(null)
   const lastHtmlRef = useRef<string>('')
 
   // Description generation state
@@ -160,9 +164,9 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
     }
   }, [name])
 
-  // Debounced auto-generation when HTML changes
+  // Debounced auto-generation when HTML changes (only if not using custom thumbnail)
   useEffect(() => {
-    if (!htmlContent.trim()) return
+    if (!htmlContent.trim() || useCustomThumbnail) return
 
     // Clear any pending generation
     if (thumbnailGenerationRef.current) {
@@ -179,7 +183,54 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
         clearTimeout(thumbnailGenerationRef.current)
       }
     }
-  }, [htmlContent, generateThumbnail])
+  }, [htmlContent, generateThumbnail, useCustomThumbnail])
+
+  // Handle custom thumbnail upload
+  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingThumbnail(true)
+    setError(null)
+
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('folder', '/thumbnails')
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to upload thumbnail')
+      }
+
+      setThumbnailUrl(result.url)
+      setUseCustomThumbnail(true)
+    } catch (err) {
+      console.error('Thumbnail upload error:', err)
+      setError(err instanceof Error ? err.message : 'Failed to upload thumbnail')
+    } finally {
+      setIsUploadingThumbnail(false)
+      // Reset input so same file can be selected again
+      if (thumbnailInputRef.current) {
+        thumbnailInputRef.current.value = ''
+      }
+    }
+  }
+
+  // Switch to auto-generated thumbnail
+  const handleUseAutoThumbnail = () => {
+    setUseCustomThumbnail(false)
+    lastHtmlRef.current = '' // Reset to trigger regeneration
+    if (htmlContent.trim()) {
+      generateThumbnail(htmlContent)
+    }
+  }
 
   // Auto-generate description when HTML content changes (only if description is empty)
   const generateDescription = useCallback(async (html: string) => {
@@ -699,36 +750,89 @@ export function TemplateEditor({ template, isNew = false }: TemplateEditorProps)
               />
             </div>
 
-            {/* Auto-generated Thumbnail Preview */}
-            {(thumbnailUrl || isGeneratingThumbnail) && (
-              <div className="space-y-2 pt-4 border-t border-border">
-                <Label>Generated Thumbnail</Label>
-                {isGeneratingThumbnail ? (
-                  <div className="flex items-center gap-2 px-4 py-6 bg-muted rounded-xl text-muted-foreground">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span className="text-sm">Generating thumbnail...</span>
-                  </div>
-                ) : thumbnailUrl ? (
-                  <div className="relative">
-                    <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted">
-                      <Image
-                        src={thumbnailUrl}
-                        alt="Thumbnail preview"
-                        fill
-                        className="object-contain"
-                      />
-                    </div>
-                    <button
+            {/* Thumbnail Section */}
+            <div className="space-y-3 pt-4 border-t border-border">
+              <div className="flex items-center justify-between">
+                <Label>Thumbnail</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    ref={thumbnailInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleThumbnailUpload}
+                    className="hidden"
+                    id="thumbnail-upload"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => thumbnailInputRef.current?.click()}
+                    disabled={isUploadingThumbnail}
+                    className="h-7 px-2 text-xs"
+                  >
+                    {isUploadingThumbnail ? (
+                      <>
+                        <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Upload className="w-3 h-3 mr-1" />
+                        Upload Custom
+                      </>
+                    )}
+                  </Button>
+                  {useCustomThumbnail && (
+                    <Button
                       type="button"
-                      onClick={() => setThumbnailUrl('')}
-                      className="absolute top-2 right-2 p-1.5 bg-red-500/80 backdrop-blur rounded-full hover:bg-red-500 transition-colors"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleUseAutoThumbnail}
+                      className="h-7 px-2 text-xs"
                     >
-                      <X className="w-4 h-4 text-white" />
-                    </button>
-                  </div>
-                ) : null}
+                      Use Auto-Generated
+                    </Button>
+                  )}
+                </div>
               </div>
-            )}
+
+              {isGeneratingThumbnail ? (
+                <div className="flex items-center gap-2 px-4 py-6 bg-muted rounded-xl text-muted-foreground">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span className="text-sm">Generating thumbnail...</span>
+                </div>
+              ) : thumbnailUrl ? (
+                <div className="relative">
+                  <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-muted">
+                    <Image
+                      src={thumbnailUrl}
+                      alt="Thumbnail preview"
+                      fill
+                      className="object-contain"
+                    />
+                  </div>
+                  <div className="absolute top-2 left-2 px-2 py-1 bg-black/60 backdrop-blur rounded text-xs text-white">
+                    {useCustomThumbnail ? 'Custom' : 'Auto-generated'}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setThumbnailUrl('')
+                      setUseCustomThumbnail(false)
+                    }}
+                    className="absolute top-2 right-2 p-1.5 bg-red-500/80 backdrop-blur rounded-full hover:bg-red-500 transition-colors"
+                  >
+                    <X className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center px-4 py-8 bg-muted rounded-xl text-muted-foreground border-2 border-dashed border-border">
+                  <Upload className="w-8 h-8 mb-2 opacity-50" />
+                  <p className="text-sm">Upload a thumbnail or add HTML to auto-generate</p>
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>

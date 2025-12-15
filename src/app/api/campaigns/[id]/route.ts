@@ -9,7 +9,17 @@ const updateCampaignSchema = z.object({
   is_active: z.boolean().optional(),
 })
 
-// GET - Get a single campaign
+// Helper to check if user is admin
+async function isUserAdmin(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .single()
+  return profile?.role === 'admin'
+}
+
+// GET - Get a single campaign (admins can access any, users only their own)
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -23,12 +33,19 @@ export async function GET(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: campaign, error } = await supabase
+    const isAdmin = await isUserAdmin(supabase, user.id)
+
+    let query = supabase
       .from('campaigns')
       .select('*')
       .eq('id', id)
-      .eq('user_id', user.id)
-      .single()
+
+    // Only filter by user_id for non-admins
+    if (!isAdmin) {
+      query = query.eq('user_id', user.id)
+    }
+
+    const { data: campaign, error } = await query.single()
 
     if (error || !campaign) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
@@ -41,7 +58,7 @@ export async function GET(
   }
 }
 
-// PUT - Update a campaign
+// PUT - Update a campaign (admins can update any, users only their own)
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -55,19 +72,24 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    const isAdmin = await isUserAdmin(supabase, user.id)
     const body = await request.json()
     const validatedData = updateCampaignSchema.parse(body)
 
-    const { data: campaign, error } = await supabase
+    let query = supabase
       .from('campaigns')
       .update({
         ...validatedData,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)
-      .eq('user_id', user.id)
-      .select()
-      .single()
+
+    // Only filter by user_id for non-admins
+    if (!isAdmin) {
+      query = query.eq('user_id', user.id)
+    }
+
+    const { data: campaign, error } = await query.select().single()
 
     if (error || !campaign) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 })
@@ -83,7 +105,7 @@ export async function PUT(
   }
 }
 
-// DELETE - Delete a campaign
+// DELETE - Delete a campaign (admins can delete any, users only their own)
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -97,11 +119,19 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { error } = await supabase
+    const isAdmin = await isUserAdmin(supabase, user.id)
+
+    let query = supabase
       .from('campaigns')
       .delete()
       .eq('id', id)
-      .eq('user_id', user.id)
+
+    // Only filter by user_id for non-admins
+    if (!isAdmin) {
+      query = query.eq('user_id', user.id)
+    }
+
+    const { error } = await query
 
     if (error) {
       console.error('Error deleting campaign:', error)

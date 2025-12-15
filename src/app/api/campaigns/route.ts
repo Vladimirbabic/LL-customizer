@@ -8,7 +8,7 @@ const campaignSchema = z.object({
   color: z.string().optional().default('#f5d5d5'),
 })
 
-// GET - List all campaigns for the current user
+// GET - List all campaigns (admins see all, users see their own)
 export async function GET() {
   try {
     const supabase = await createClient()
@@ -18,14 +18,29 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: campaigns, error } = await supabase
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single()
+
+    const isAdmin = profile?.role === 'admin'
+
+    // Build query - admins see all, users see their own (RLS also enforces this)
+    let query = supabase
       .from('campaigns')
       .select(`
         *,
         templates:listing_templates(count)
       `)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+
+    // Only filter by user_id for non-admins
+    if (!isAdmin) {
+      query = query.eq('user_id', user.id)
+    }
+
+    const { data: campaigns, error } = await query.order('created_at', { ascending: false })
 
     if (error) {
       console.error('Error fetching campaigns:', error)

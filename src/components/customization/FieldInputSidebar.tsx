@@ -138,6 +138,11 @@ export function FieldInputSidebar({
       setCopied(true)
       toast.success('Prompt copied to clipboard')
 
+      // Open Claude after 1.5 seconds
+      setTimeout(() => {
+        window.open('https://claude.ai/new', '_blank')
+      }, 1500)
+
       // Reset copied state after delay
       setTimeout(() => {
         setCopied(false)
@@ -360,12 +365,14 @@ export function FieldInputSidebar({
                 {copied ? (
                   <>
                     <Check className="w-5 h-5" />
-                    <span>Copied!</span>
+                    <span>Copied! Opening Claude...</span>
                   </>
                 ) : (
                   <>
                     <Copy className="w-4 h-4" />
-                    <span>Copy Prompt</span>
+                    <span>Copy</span>
+                    <Image src={mounted && theme === 'dark' ? '/claude.svg' : '/dark-claude.svg'} alt="Claude" width={70} height={18} className="opacity-70" />
+                    <span>Prompt</span>
                   </>
                 )}
               </Button>

@@ -171,21 +171,6 @@ export default function DesignsPage() {
                   </div>
                 )}
 
-                {/* Campaign badge */}
-                {template.campaign_id && campaigns.find((c) => c.id === template.campaign_id) && (
-                  <div className="absolute top-2 left-2">
-                    <span
-                      className="px-2 py-1 text-[10px] sm:text-xs font-medium rounded-full backdrop-blur-sm"
-                      style={{
-                        backgroundColor: `${campaigns.find((c) => c.id === template.campaign_id)?.color}30`,
-                        color: campaigns.find((c) => c.id === template.campaign_id)?.color,
-                      }}
-                    >
-                      {campaigns.find((c) => c.id === template.campaign_id)?.name}
-                    </span>
-                  </div>
-                )}
-
                 {/* Preview button on hover */}
                 <button
                   onClick={() => setPreviewTemplate(template)}
@@ -196,6 +181,24 @@ export default function DesignsPage() {
               </div>
 
               <div className="p-4">
+                {/* Campaign badge above title */}
+                {template.campaign_id && campaigns.find((c) => c.id === template.campaign_id) && (
+                  <div className="mb-2">
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5 text-[10px] sm:text-xs font-medium rounded-full"
+                      style={{
+                        backgroundColor: `${campaigns.find((c) => c.id === template.campaign_id)?.color}20`,
+                        color: campaigns.find((c) => c.id === template.campaign_id)?.color,
+                      }}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: campaigns.find((c) => c.id === template.campaign_id)?.color }}
+                      />
+                      {campaigns.find((c) => c.id === template.campaign_id)?.name}
+                    </span>
+                  </div>
+                )}
                 <h3 className="font-medium text-lg text-foreground mb-1 group-hover:text-primary transition-colors">
                   {template.name}
                 </h3>

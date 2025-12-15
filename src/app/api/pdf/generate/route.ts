@@ -62,10 +62,10 @@ export async function POST(request: NextRequest) {
       <style>
         @page {
           size: letter;
-          margin: 0;
+          margin: 0.25in 0.5in;
         }
         html, body {
-          max-height: 11in !important;
+          max-height: 10.5in !important;
           overflow: hidden !important;
           page-break-after: avoid !important;
           page-break-before: avoid !important;
@@ -113,8 +113,8 @@ export async function POST(request: NextRequest) {
     const pdfBuffer = await page.pdf({
       format: 'letter',
       printBackground: true,
-      margin: { top: 0, right: 0, bottom: 0, left: 0 },
-      preferCSSPageSize: true,
+      margin: { top: '0.25in', right: '0.5in', bottom: '0.25in', left: '0.5in' },
+      preferCSSPageSize: false,
     })
 
     await browser.close()

@@ -56,33 +56,39 @@ export async function POST(request: NextRequest) {
       deviceScaleFactor: 2,
     })
 
-    // Inject CSS to ensure single page and prevent overflow
-    const singlePageCss = `
+    // Inject CSS for multi-page PDF support
+    const multiPageCss = `
       <style>
         @page {
           size: letter;
           margin: 0;
         }
         html, body {
-          max-height: 11in !important;
-          overflow: hidden !important;
-          page-break-after: avoid !important;
-          page-break-before: avoid !important;
-          page-break-inside: avoid !important;
+          margin: 0;
+          padding: 0;
         }
-        * {
-          page-break-inside: avoid !important;
+        /* Support for explicit page elements */
+        .page, [data-page] {
+          width: 8.5in;
+          height: 11in;
+          page-break-after: always;
+          page-break-inside: avoid;
+          overflow: hidden;
+          box-sizing: border-box;
+        }
+        .page:last-child, [data-page]:last-child {
+          page-break-after: auto;
         }
       </style>
     `
 
-    // Inject single-page CSS into HTML
-    const htmlWithConstraints = html.includes('</head>')
-      ? html.replace('</head>', `${singlePageCss}</head>`)
-      : `${singlePageCss}${html}`
+    // Inject multi-page CSS into HTML
+    const htmlWithStyles = html.includes('</head>')
+      ? html.replace('</head>', `${multiPageCss}</head>`)
+      : `${multiPageCss}${html}`
 
     // Set the HTML content
-    await page.setContent(htmlWithConstraints, {
+    await page.setContent(htmlWithStyles, {
       waitUntil: ['load', 'networkidle0'],
     })
 

@@ -29,6 +29,7 @@ function convertModernColors(html: string): string {
 
 /**
  * Generates a PDF by capturing the live preview element as an image.
+ * Supports multi-page documents with .page or [data-page] elements.
  * Uses html-to-image which preserves text spacing better than html2canvas.
  */
 export async function generatePdfFromPreview(
@@ -41,24 +42,9 @@ export async function generatePdfFromPreview(
 
   console.log('[PDF] Capturing preview element with html-to-image...')
 
-  // Use toPng for best quality text rendering
-  const dataUrl = await htmlToImage.toPng(previewElement, {
-    quality: 1,
-    pixelRatio: 2, // High resolution for print
-    backgroundColor: '#ffffff',
-  })
-
-  console.log('[PDF] Image captured successfully')
-
-  // Create an image to get dimensions
-  const img = new Image()
-  await new Promise((resolve, reject) => {
-    img.onload = resolve
-    img.onerror = reject
-    img.src = dataUrl
-  })
-
-  console.log(`[PDF] Image size: ${img.width}x${img.height}`)
+  // Check for multiple page elements
+  const pageElements = previewElement.querySelectorAll('.page, [data-page]')
+  const hasMultiplePages = pageElements.length > 1
 
   // Create PDF with letter size
   const pdf = new jsPDF({
@@ -67,27 +53,70 @@ export async function generatePdfFromPreview(
     format: 'letter',
   })
 
-  // Fit to letter size (8.5 x 11 inches)
   const pageWidth = 8.5
   const pageHeight = 11
-  const imgAspect = img.width / img.height
-  const pageAspect = pageWidth / pageHeight
 
-  let pdfImgWidth, pdfImgHeight, offsetX, offsetY
+  if (hasMultiplePages) {
+    console.log(`[PDF] Found ${pageElements.length} pages`)
 
-  if (imgAspect > pageAspect) {
-    pdfImgWidth = pageWidth
-    pdfImgHeight = pageWidth / imgAspect
-    offsetX = 0
-    offsetY = (pageHeight - pdfImgHeight) / 2
+    for (let i = 0; i < pageElements.length; i++) {
+      const pageEl = pageElements[i] as HTMLElement
+
+      // Capture each page
+      const dataUrl = await htmlToImage.toPng(pageEl, {
+        quality: 1,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+      })
+
+      // Add new page for pages after the first
+      if (i > 0) {
+        pdf.addPage()
+      }
+
+      // Add full-page image
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pageWidth, pageHeight)
+      console.log(`[PDF] Page ${i + 1} captured`)
+    }
   } else {
-    pdfImgHeight = pageHeight
-    pdfImgWidth = pageHeight * imgAspect
-    offsetX = (pageWidth - pdfImgWidth) / 2
-    offsetY = 0
-  }
+    // Single page - capture the entire element
+    const dataUrl = await htmlToImage.toPng(previewElement, {
+      quality: 1,
+      pixelRatio: 2,
+      backgroundColor: '#ffffff',
+    })
 
-  pdf.addImage(dataUrl, 'PNG', offsetX, offsetY, pdfImgWidth, pdfImgHeight)
+    console.log('[PDF] Image captured successfully')
+
+    // Create an image to get dimensions
+    const img = new Image()
+    await new Promise((resolve, reject) => {
+      img.onload = resolve
+      img.onerror = reject
+      img.src = dataUrl
+    })
+
+    console.log(`[PDF] Image size: ${img.width}x${img.height}`)
+
+    const imgAspect = img.width / img.height
+    const pageAspect = pageWidth / pageHeight
+
+    let pdfImgWidth, pdfImgHeight, offsetX, offsetY
+
+    if (imgAspect > pageAspect) {
+      pdfImgWidth = pageWidth
+      pdfImgHeight = pageWidth / imgAspect
+      offsetX = 0
+      offsetY = (pageHeight - pdfImgHeight) / 2
+    } else {
+      pdfImgHeight = pageHeight
+      pdfImgWidth = pageHeight * imgAspect
+      offsetX = (pageWidth - pdfImgWidth) / 2
+      offsetY = 0
+    }
+
+    pdf.addImage(dataUrl, 'PNG', offsetX, offsetY, pdfImgWidth, pdfImgHeight)
+  }
 
   console.log('[PDF] PDF generated successfully')
   return pdf.output('blob')
@@ -95,6 +124,7 @@ export async function generatePdfFromPreview(
 
 /**
  * Generates a PDF from HTML content using client-side rendering.
+ * Supports multi-page documents with .page or [data-page] elements.
  * Falls back to this when server-side Puppeteer fails.
  */
 export async function generatePdfClientSide(
@@ -106,13 +136,13 @@ export async function generatePdfClientSide(
   // Convert modern CSS colors that html2canvas doesn't support
   const processedHtml = convertModernColors(html)
 
-  // Create iframe for rendering
+  // Create iframe for rendering - make it tall enough for multiple pages
   const iframe = document.createElement('iframe')
   iframe.style.position = 'fixed'
   iframe.style.left = '-10000px'
   iframe.style.top = '0'
   iframe.style.width = '816px'
-  iframe.style.height = '1056px'
+  iframe.style.height = '10560px' // 10 pages max height
   iframe.style.border = 'none'
   iframe.style.background = 'white'
   document.body.appendChild(iframe)
@@ -123,7 +153,7 @@ export async function generatePdfClientSide(
       throw new Error('Could not access iframe document')
     }
 
-    // Write complete HTML document
+    // Write complete HTML document with multi-page support
     iframeDoc.open()
     iframeDoc.write(`
       <!DOCTYPE html>
@@ -133,9 +163,14 @@ export async function generatePdfClientSide(
             * { margin: 0; padding: 0; box-sizing: border-box; }
             body {
               width: 816px;
-              min-height: 1056px;
               background: white;
               font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+            .page, [data-page] {
+              width: 816px;
+              height: 1056px;
+              overflow: hidden;
+              box-sizing: border-box;
             }
           </style>
         </head>
@@ -168,16 +203,9 @@ export async function generatePdfClientSide(
 
     console.log('[PDF] Capturing with html-to-image...')
 
-    // Capture using html-to-image (better text rendering than html2canvas)
-    const dataUrl = await htmlToImage.toPng(iframeDoc.body, {
-      quality: 1,
-      pixelRatio: 2,
-      backgroundColor: '#ffffff',
-      width: 816,
-      height: 1056,
-    })
-
-    console.log('[PDF] Image captured')
+    // Check for multiple page elements
+    const pageElements = iframeDoc.querySelectorAll('.page, [data-page]')
+    const hasMultiplePages = pageElements.length > 1
 
     // Create PDF
     const pdf = new jsPDF({
@@ -187,8 +215,43 @@ export async function generatePdfClientSide(
       hotfixes: ['px_scaling'],
     })
 
-    // Add as full-page image
-    pdf.addImage(dataUrl, 'PNG', 0, 0, 816, 1056)
+    if (hasMultiplePages) {
+      console.log(`[PDF] Found ${pageElements.length} pages`)
+
+      for (let i = 0; i < pageElements.length; i++) {
+        const pageEl = pageElements[i] as HTMLElement
+
+        // Capture each page
+        const dataUrl = await htmlToImage.toPng(pageEl, {
+          quality: 1,
+          pixelRatio: 2,
+          backgroundColor: '#ffffff',
+          width: 816,
+          height: 1056,
+        })
+
+        // Add new page for pages after the first
+        if (i > 0) {
+          pdf.addPage()
+        }
+
+        // Add full-page image
+        pdf.addImage(dataUrl, 'PNG', 0, 0, 816, 1056)
+        console.log(`[PDF] Page ${i + 1} captured`)
+      }
+    } else {
+      // Single page - capture the body
+      const dataUrl = await htmlToImage.toPng(iframeDoc.body, {
+        quality: 1,
+        pixelRatio: 2,
+        backgroundColor: '#ffffff',
+        width: 816,
+        height: 1056,
+      })
+
+      console.log('[PDF] Image captured')
+      pdf.addImage(dataUrl, 'PNG', 0, 0, 816, 1056)
+    }
 
     console.log('[PDF] PDF generated successfully')
     return pdf.output('blob')

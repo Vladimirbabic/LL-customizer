@@ -4,18 +4,12 @@ import { useState, useEffect } from 'react'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Settings, Sparkles, Check, MessageSquare } from 'lucide-react'
+import { Settings, Sparkles, Check } from 'lucide-react'
 
 type AIProvider = 'anthropic' | 'openai'
 
-interface SettingsData {
-  provider: AIProvider
-  systemPrompt: string
-}
-
 export default function AdminSettingsPage() {
   const [provider, setProvider] = useState<AIProvider>('anthropic')
-  const [systemPrompt, setSystemPrompt] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState(false)
@@ -28,7 +22,6 @@ export default function AdminSettingsPage() {
         if (response.ok) {
           const result = await response.json()
           setProvider(result.data?.value?.provider || 'anthropic')
-          setSystemPrompt(result.data?.value?.systemPrompt || '')
         }
       } catch (err) {
         console.error('Error fetching settings:', err)
@@ -51,7 +44,7 @@ export default function AdminSettingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           key: 'ai_provider',
-          value: { provider, systemPrompt }
+          value: { provider }
         })
       })
 
@@ -145,26 +138,6 @@ export default function AdminSettingsPage() {
               </p>
             </button>
           </div>
-        </div>
-
-        {/* System Prompt Section */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <MessageSquare className="w-4 h-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium text-foreground">System Prompt</h3>
-          </div>
-          <p className="text-sm text-muted-foreground mb-4">
-            This prompt will be included with every AI request for template personalization. Use it to define brand voice, style guidelines, or specific instructions.
-          </p>
-          <textarea
-            value={systemPrompt}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            placeholder="Example: Always maintain a professional tone. Use warm, welcoming language. Ensure contact information is prominently displayed..."
-            className="w-full min-h-[600px] px-4 py-3 bg-muted border border-border rounded-xl text-foreground placeholder-muted-foreground focus:outline-none focus:border-ring focus:ring-1 focus:ring-ring transition-colors resize-y"
-          />
-          <p className="text-xs text-muted-foreground mt-2">
-            {systemPrompt.length} characters
-          </p>
         </div>
 
         {error && (
